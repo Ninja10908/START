@@ -1,0 +1,2037 @@
+-- Multiple instance check
+local benchmark = tick()
+assert(finite_yield_loaded==nil, "kurdhub is already running!")
+assert(_G.finite_yield_loaded==nil, "kurdhub is already running!")
+if getgenv then
+	getgenv().finite_yield_loaded = true
+else
+	_G.finite_yield_loaded = true
+end
+
+-- Wait for game to load (if autoexec)
+if not game:IsLoaded() then	
+	game.Loaded:Wait()
+end
+
+-- Localization
+local Instance = Instance
+local CFrame = CFrame
+local Vector3 = Vector3
+local table = table
+local game = game
+local tick = tick
+local pairs = pairs
+local string = string
+local tonumber = tonumber
+local task = task
+local wait = wait
+
+-- GUI
+local FiniteYield = {};
+local gui = nil
+
+-- FiniteYield
+FiniteYield["1"] = Instance.new("ScreenGui")
+FiniteYield["1"]["IgnoreGuiInset"] = true;
+FiniteYield["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
+FiniteYield["1"]["Name"] = [[FiniteYield]];
+FiniteYield["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
+FiniteYield["1"]["ResetOnSpawn"] = false;
+gui = FiniteYield["1"]
+
+-- FiniteYield.Main
+FiniteYield["2"] = Instance.new("Frame", FiniteYield["1"]);
+FiniteYield["2"]["BorderSizePixel"] = 0;
+FiniteYield["2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+FiniteYield["2"]["AnchorPoint"] = Vector2.new(1, 1);
+FiniteYield["2"]["Size"] = UDim2.new(0, 150, 0, 200);
+FiniteYield["2"]["Position"] = UDim2.new(1, 0, 1, 180);
+FiniteYield["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["2"]["Name"] = [[Main]];
+FiniteYield["2"]["BackgroundTransparency"] = 0.5;
+
+-- FiniteYield.Main.Title
+FiniteYield["3"] = Instance.new("TextLabel", FiniteYield["2"]);
+FiniteYield["3"]["TextWrapped"] = true;
+FiniteYield["3"]["BorderSizePixel"] = 0;
+FiniteYield["3"]["TextScaled"] = true;
+FiniteYield["3"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51);
+FiniteYield["3"]["TextSize"] = 14;
+FiniteYield["3"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+FiniteYield["3"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+FiniteYield["3"]["BackgroundTransparency"] = 0.5;
+FiniteYield["3"]["Size"] = UDim2.new(1, 0, 0, 20);
+FiniteYield["3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["3"]["Text"] = [[kurdhub]];
+FiniteYield["3"]["Name"] = [[Title]];
+
+-- FiniteYield.Main.CommandBar
+FiniteYield["4"] = Instance.new("TextBox", FiniteYield["2"]);
+FiniteYield["4"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+FiniteYield["4"]["BorderSizePixel"] = 0;
+FiniteYield["4"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+FiniteYield["4"]["TextWrapped"] = true;
+FiniteYield["4"]["TextSize"] = 14;
+FiniteYield["4"]["Name"] = [[CommandBar]];
+FiniteYield["4"]["TextScaled"] = true;
+FiniteYield["4"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51);
+FiniteYield["4"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+FiniteYield["4"]["Size"] = UDim2.new(1, 0, 0, 30);
+FiniteYield["4"]["Position"] = UDim2.new(0, 0, 0, 20);
+FiniteYield["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["4"]["Text"] = [[]];
+FiniteYield["4"]["BackgroundTransparency"] = 0.5;
+
+-- FiniteYield.Main.Commands
+FiniteYield["5"] = Instance.new("ScrollingFrame", FiniteYield["2"]);
+FiniteYield["5"]["Active"] = true;
+FiniteYield["5"]["BorderSizePixel"] = 0;
+FiniteYield["5"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
+FiniteYield["5"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51);
+FiniteYield["5"]["Name"] = [[Commands]];
+FiniteYield["5"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
+FiniteYield["5"]["Size"] = UDim2.new(1, 0, 1, -50);
+FiniteYield["5"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["5"]["Position"] = UDim2.new(0, 0, 0, 50);
+FiniteYield["5"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["5"]["BackgroundTransparency"] = 0.5;
+
+-- FiniteYield.Main.Commands.UIListLayout
+FiniteYield["6"] = Instance.new("UIListLayout", FiniteYield["5"]);
+FiniteYield["6"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
+
+-- FiniteYield.Notifications
+FiniteYield["7"] = Instance.new("Frame", FiniteYield["1"]);
+FiniteYield["7"]["BorderSizePixel"] = 0;
+FiniteYield["7"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+FiniteYield["7"]["AnchorPoint"] = Vector2.new(1, 0.5);
+FiniteYield["7"]["Size"] = UDim2.new(0.2, 0, 0, 150);
+FiniteYield["7"]["Position"] = UDim2.new(1, 0, 0.5, 0);
+FiniteYield["7"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+FiniteYield["7"]["Name"] = [[Notifications]];
+FiniteYield["7"]["BackgroundTransparency"] = 1;
+
+local GuiUtil = {};
+-- CommandButton
+GuiUtil["2"] = Instance.new("TextButton");
+GuiUtil["2"]["TextWrapped"] = true;
+GuiUtil["2"]["BorderSizePixel"] = 0;
+GuiUtil["2"]["TextSize"] = 14;
+GuiUtil["2"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+GuiUtil["2"]["TextScaled"] = true;
+GuiUtil["2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+GuiUtil["2"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+GuiUtil["2"]["Size"] = UDim2.new(1, 0, 0, 20);
+GuiUtil["2"]["BackgroundTransparency"] = 1;
+GuiUtil["2"]["Name"] = [[CommandButton]];
+GuiUtil["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+
+-- Notif
+GuiUtil["3"] = Instance.new("TextLabel", GuiUtil["1"]);
+GuiUtil["3"]["TextWrapped"] = true;
+GuiUtil["3"]["BorderSizePixel"] = 0;
+GuiUtil["3"]["TextScaled"] = true;
+GuiUtil["3"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51);
+GuiUtil["3"]["TextSize"] = 14;
+GuiUtil["3"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+GuiUtil["3"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+GuiUtil["3"]["BackgroundTransparency"] = 0.5;
+GuiUtil["3"]["AnchorPoint"] = Vector2.new(1, 0.5);
+GuiUtil["3"]["Size"] = UDim2.new(1, 0, 0, 20);
+GuiUtil["3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+GuiUtil["3"]["Text"] = [[kurdhub]];
+GuiUtil["3"]["Name"] = [[Notif]];
+GuiUtil["3"]["Position"] = UDim2.new(1.2, 0, 0.5, 0);
+
+-- Services
+local HttpService = game:GetService("HttpService")
+local VirtualUser = game:GetService("VirtualUser")
+local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GroupService = game:GetService("GroupService")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
+local ContextActionService = game:GetService("ContextActionService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+-- Variables
+local plr = Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local mouse = plr:GetMouse()
+local main = gui.Main
+local prefix = {Enum.KeyCode.Period, "."}
+
+-- Util vars
+local fy_version = "1.0.1"
+local keycode = Enum.KeyCode
+local fyHidden = false
+local historyIndice = 0
+local isOldChat = (TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService)
+local chatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true)
+local chatChannel = not isOldChat and TextChatService.TextChannels.RBXGeneral
+local CopyToClipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or print
+local Drawing = Drawing and Drawing or loadstring(game:HttpGet("https://pastebin.com/raw/ieje6X39"))()
+local QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport or queueonteleport or (fluxus and fluxus.queue_on_teleport)
+local SetSimRadius = setsimulationradius or set_simulation_radius
+local SetHiddenProp = sethiddenproperty or set_hidden_property or set_hidden_prop
+
+-- Keybinds
+local binds = {}
+local function bindToKey(key, func, ignoreIfProccesed)
+	table.insert(binds, {key, func, ignoreIfProccesed})
+	return #binds
+end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	for _, bind in pairs(binds) do
+		if processed and bind[3] then
+			continue
+		end
+		if input.KeyCode == bind[1] then
+			bind[2]()
+		end 
+	end
+end)
+
+local bindIndice = bindToKey(prefix[1], function()
+	main.CommandBar:CaptureFocus()
+end, true)
+
+local temp = {}
+local commands = {}
+local cmdHistory = {}
+
+-- Util
+local autocomplete = {}
+local function populateListbox(command)
+	local commandList = main.Commands
+	commandList.Visible = true
+	for cmd, _ in pairs(commands) do
+		if cmd:sub(1, #command-1):lower() == command:lower():sub(2,#command) then
+			local commandButton = GuiUtil["2"]:Clone()
+			commandButton.Text = prefix[2]..cmd
+			commandButton.Parent = commandList
+			table.insert(autocomplete, commandButton)
+		end
+	end
+end
+
+plr.CharacterAdded:Connect(function(c)
+	char = c
+end)
+
+local function addCommand(command, func, aliases)
+	commands[command] = func
+	if aliases then
+		for _, alias in pairs(aliases) do
+			commands[alias] = func
+		end
+	end
+end
+
+-- straight from the Shave init script lol
+local function randomString(length)
+	local str = ""
+	for i = 1, (length or 10) do
+		local rand = math.random(1, 3)
+		if rand == 1 then
+			str = str .. string.char(math.random(65, 90))  -- A-Z
+		elseif rand == 2 then
+			str = str .. string.char(math.random(97, 122)) -- a-z
+		else
+			str = str .. string.char(math.random(48, 57))  -- 0-9
+		end
+	end
+	return str
+end
+
+-- basically just gethui, made for executors without gethui or that can't access coregui
+local function getHiddenUI()
+	local success = pcall(function() 
+		local test = Instance.new("ScreenGui")
+		test.Parent = CoreGui
+		test:Destroy()
+	end)
+	if success then
+		return CoreGui
+	else
+		return plr.PlayerGui
+	end
+end
+
+local function expandUi()
+	TweenService:Create(main, TweenInfo.new(.35), {Position = UDim2.fromScale(1,1)}):Play()
+end
+
+local function minimizeUi()
+	TweenService:Create(main, TweenInfo.new(.35), {Position = UDim2.new(1,0,1,fyHidden and 200 or 180)}):Play()
+	historyIndice = #cmdHistory
+end
+
+local function getPlr(name)
+	if name == nil then return {plr} end
+
+	if name:lower() == "me" then
+		return {plr}
+	elseif name:lower() == "random" then
+		return {Players:GetPlayers()[math.random(1, #Players:GetPlayers())]}
+	elseif name:lower() == "all" then
+		return Players:GetPlayers()
+	elseif name:lower() == "others" then
+		local others = {}
+		for _, v in pairs(Players:GetPlayers()) do
+			if v ~= plr then
+				table.insert(others, v)
+			end
+		end
+		return others
+	end
+
+	for _, v in pairs(Players:GetPlayers()) do
+		if v.Name:lower():sub(1, #name) == name:lower() then
+			return {v}
+		end
+	end
+end
+
+local function getn(t)
+	local n = 0
+	for _, v in pairs(t) do
+		n += 1
+	end
+	return n
+end
+
+local function getLatestNotif()
+	local highest = 0
+	for i,v in pairs(gui.Notifications:GetChildren()) do
+		if tonumber(v.Name) then
+			highest = math.max(tonumber(v.Name), highest)
+		end
+	end
+	return highest
+end
+
+local function fyNotif(txt, dur)
+	local notif = GuiUtil["3"]:Clone()
+	notif.Parent = gui.Notifications
+	notif.Text = txt
+	notif.Name = getLatestNotif()+1
+	notif.Position += UDim2.fromOffset(0,20*getLatestNotif())
+	TweenService:Create(notif, TweenInfo.new(.5), {Position = UDim2.new(1,0,.5,notif.Position.Y.Offset)}):Play()
+	delay((dur or 2), function()
+		TweenService:Create(notif, TweenInfo.new(.5), {Position = UDim2.new(2,0,.5,notif.Position.Y.Offset)}):Play()
+		Debris:AddItem(notif, .6)
+	end)
+end
+
+local keymap = {
+	[" "] = Enum.KeyCode.Space,
+	["'"] = Enum.KeyCode.QuotedDouble,
+	["#"] = Enum.KeyCode.Hash,
+	["$"] = Enum.KeyCode.Dollar,
+	["%"] = Enum.KeyCode.Percent,
+	["&"] = Enum.KeyCode.Ampersand,
+	['"'] = Enum.KeyCode.Quote,
+	["("] = Enum.KeyCode.LeftParenthesis,
+	[")"] = Enum.KeyCode.RightParenthesis,
+	["*"] = Enum.KeyCode.Asterisk,
+	["+"] = Enum.KeyCode.Plus,
+	[","] = Enum.KeyCode.Comma,
+	["-"] = Enum.KeyCode.Minus,
+	["."] = Enum.KeyCode.Period,
+	["/"] = Enum.KeyCode.Slash,
+	["0"] = Enum.KeyCode.Zero,
+	["1"] = Enum.KeyCode.One,
+	["2"] = Enum.KeyCode.Two,
+	["3"] = Enum.KeyCode.Three,
+	["4"] = Enum.KeyCode.Four,
+	["5"] = Enum.KeyCode.Five,
+	["6"] = Enum.KeyCode.Six,
+	["7"] = Enum.KeyCode.Seven,
+	["8"] = Enum.KeyCode.Eight,
+	["9"] = Enum.KeyCode.Nine,
+	[":"] = Enum.KeyCode.Colon,
+	[";"] = Enum.KeyCode.Semicolon,
+	["<"] = Enum.KeyCode.LessThan,
+	["="] = Enum.KeyCode.Equals,
+	[">"] = Enum.KeyCode.GreaterThan,
+	["?"] = Enum.KeyCode.Question,
+	["@"] = Enum.KeyCode.At,
+	["["] = Enum.KeyCode.LeftBracket,
+	["\\"] = Enum.KeyCode.BackSlash,
+	["]"] = Enum.KeyCode.RightBracket,
+	["^"] = Enum.KeyCode.Caret,
+	["_"] = Enum.KeyCode.Underscore,
+	["`"] = Enum.KeyCode.Backquote,
+	["a"] = Enum.KeyCode.A,
+	["b"] = Enum.KeyCode.B,
+	["c"] = Enum.KeyCode.C,
+	["d"] = Enum.KeyCode.D,
+	["e"] = Enum.KeyCode.E,
+	["f"] = Enum.KeyCode.F,
+	["g"] = Enum.KeyCode.G,
+	["h"] = Enum.KeyCode.H,
+	["i"] = Enum.KeyCode.I,
+	["j"] = Enum.KeyCode.J,
+	["k"] = Enum.KeyCode.K,
+	["l"] = Enum.KeyCode.L,
+	["m"] = Enum.KeyCode.M,
+	["n"] = Enum.KeyCode.N,
+	["o"] = Enum.KeyCode.O,
+	["p"] = Enum.KeyCode.P,
+	["q"] = Enum.KeyCode.Q,
+	["r"] = Enum.KeyCode.R,
+	["s"] = Enum.KeyCode.S,
+	["t"] = Enum.KeyCode.T,
+	["u"] = Enum.KeyCode.U,
+	["v"] = Enum.KeyCode.V,
+	["w"] = Enum.KeyCode.W,
+	["x"] = Enum.KeyCode.X,
+	["y"] = Enum.KeyCode.Y,
+	["z"] = Enum.KeyCode.Z,
+	["{"] = Enum.KeyCode.LeftCurly,
+	["|"] = Enum.KeyCode.Pipe,
+	["}"] = Enum.KeyCode.RightCurly,
+	["~"] = Enum.KeyCode.Tilde,
+}
+
+local function getKeycodeFromString(str)
+	for k, v in pairs(keymap) do
+		if k == str:lower() then
+			return v
+		end
+	end
+end
+
+-- Different executors use different methods to destroy drawing objects.
+-- This is a hacky solution to that problem
+-- Mainly made for solara support. It's drawing lib is abysmal.
+local function destroyDrawingObject(drawing)
+	local success = pcall(function()
+		if drawing.Remove then
+			drawing:Remove()
+		elseif drawing.Destroy then
+			drawing:Destroy()
+		elseif drawing.remove then
+			drawing:remove()
+		elseif drawing.destroy then
+			drawing:destroy()
+		end
+	end)
+	return success
+end
+
+-- Event listeners
+main.CommandBar:GetPropertyChangedSignal("Text"):Connect(function()
+	for _, v in pairs(autocomplete) do
+		v:Destroy()
+	end
+
+	populateListbox(main.CommandBar.Text)
+end)
+
+local cmdBarFocused = false
+main.CommandBar.FocusLost:Connect(function(enter)
+	minimizeUi()
+	cmdBarFocused = false
+	if enter then
+		local text = main.CommandBar.Text
+		if text:sub(1,1) ~= prefix[2] then return end
+		local command = text:sub(2)
+		local args = command:split(" ")
+		local cmd = args[1]
+		table.remove(args, 1)
+		if not commands[cmd:lower()] then return end
+		commands[cmd:lower()](unpack(args))
+
+		if cmdHistory[#cmdHistory] ~= text then
+			table.insert(cmdHistory, text)
+		end
+	end
+end)
+
+main.CommandBar.Focused:Connect(function()
+	cmdBarFocused = true
+	expandUi()
+end)
+
+main.MouseEnter:Connect(function()
+	expandUi()
+end)
+
+main.MouseLeave:Connect(function()
+	if not cmdBarFocused then
+		minimizeUi()
+	end
+end)
+
+plr.Chatted:Connect(function(msg)
+	local text = msg
+	if text:sub(1,1) ~= "." then return end
+	local command = text:sub(2)
+	local args = command:split(" ")
+	local cmd = args[1]
+	table.remove(args, 1)
+	if not commands[cmd:lower()] then return end
+	commands[cmd:lower()](unpack(args))
+
+	if cmdHistory[#cmdHistory] ~= text then
+		table.insert(cmdHistory, text)
+	end
+end)
+
+plr.OnTeleport:Connect(function()
+	if QueueOnTeleport then
+		print("Queued")
+		QueueOnTeleport('loadstring(game:HttpGet("https://pastebin.com/raw/WsQAzUMk"))()')
+	else
+		fyNotif("Your exploit doesn't support queueonteleport",2)
+		fyNotif("You will have to manually re-execute FY.",2)
+	end
+end)
+
+-- Command history
+historyIndice = #cmdHistory
+bindToKey(Enum.KeyCode.Up, function()
+	if cmdBarFocused then
+		if historyIndice ~= 0 then
+			main.CommandBar.Text = cmdHistory[historyIndice]
+			main.CommandBar.CursorPosition = 420
+		end
+		historyIndice = math.max(0, historyIndice-1)
+	end
+end, false)
+
+bindToKey(Enum.KeyCode.Down, function()
+	if cmdBarFocused then
+		if historyIndice <= #cmdHistory then
+			main.CommandBar.Text = cmdHistory[historyIndice] or "."
+			main.CommandBar.CursorPosition = 420
+		end
+		historyIndice = math.min(#cmdHistory, historyIndice+1)
+	end
+end, false)
+
+-- Command setup and util
+-- Freecam script by roblox
+local inFreecam = false
+local Camera = workspace.CurrentCamera
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local newCamera = workspace.CurrentCamera
+	if newCamera then
+		Camera = newCamera
+	end
+end)
+
+local INPUT_PRIORITY = Enum.ContextActionPriority.High.Value
+
+Spring = {} do
+	Spring.__index = Spring
+
+	function Spring.new(freq, pos)
+		local self = setmetatable({}, Spring)
+		self.f = freq
+		self.p = pos
+		self.v = pos*0
+		return self
+	end
+
+	function Spring:Update(dt, goal)
+		local f = self.f*2*math.pi
+		local p0 = self.p
+		local v0 = self.v
+
+		local offset = goal - p0
+		local decay = math.exp(-f*dt)
+
+		local p1 = goal + (v0*dt - offset*(f*dt + 1))*decay
+		local v1 = (f*dt*(offset*f - v0) + v0)*decay
+
+		self.p = p1
+		self.v = v1
+
+		return p1
+	end
+
+	function Spring:Reset(pos)
+		self.p = pos
+		self.v = pos*0
+	end
+end
+
+local cameraPos = Vector3.new()
+local cameraRot = Vector2.new()
+
+local velSpring = Spring.new(5, Vector3.new())
+local panSpring = Spring.new(5, Vector2.new())
+
+Input = {} do
+
+	keyboard = {
+		W = 0,
+		A = 0,
+		S = 0,
+		D = 0,
+		E = 0,
+		Q = 0,
+		Up = 0,
+		Down = 0,
+		LeftShift = 0,
+	}
+
+	mouse = {
+		Delta = Vector2.new(),
+	}
+
+	NAV_KEYBOARD_SPEED = Vector3.new(1, 1, 1)
+	PAN_MOUSE_SPEED = Vector2.new(1, 1)*(math.pi/64)
+	NAV_ADJ_SPEED = 0.75
+	NAV_SHIFT_MUL = 0.25
+
+	navSpeed = 1
+
+	function Input.Vel(dt)
+		navSpeed = math.clamp(navSpeed + dt*(keyboard.Up - keyboard.Down)*NAV_ADJ_SPEED, 0.01, 4)
+
+		local kKeyboard = Vector3.new(
+			keyboard.D - keyboard.A,
+			keyboard.E - keyboard.Q,
+			keyboard.S - keyboard.W
+		)*NAV_KEYBOARD_SPEED
+
+		local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+
+		return (kKeyboard)*(navSpeed*(shift and NAV_SHIFT_MUL or 1))
+	end
+
+	function Input.Pan(dt)
+		local kMouse = mouse.Delta*PAN_MOUSE_SPEED
+		mouse.Delta = Vector2.new()
+		return kMouse
+	end
+
+	do
+		local function Keypress(action, state, input)
+			keyboard[input.KeyCode.Name] = state == Enum.UserInputState.Begin and 1 or 0
+			return Enum.ContextActionResult.Sink
+		end
+
+		local function MousePan(action, state, input)
+			local delta = input.Delta
+			mouse.Delta = Vector2.new(-delta.y, -delta.x)
+			return Enum.ContextActionResult.Sink
+		end
+
+		local function Zero(t)
+			for k, v in pairs(t) do
+				t[k] = v*0
+			end
+		end
+
+		function Input.StartCapture()
+			ContextActionService:BindActionAtPriority("FreecamKeyboard",Keypress,false,INPUT_PRIORITY,
+				Enum.KeyCode.W,
+				Enum.KeyCode.A,
+				Enum.KeyCode.S,
+				Enum.KeyCode.D,
+				Enum.KeyCode.E,
+				Enum.KeyCode.Q,
+				Enum.KeyCode.Up,
+				Enum.KeyCode.Down
+			)
+			ContextActionService:BindActionAtPriority("FreecamMousePan",MousePan,false,INPUT_PRIORITY,Enum.UserInputType.MouseMovement)
+		end
+
+		function Input.StopCapture()
+			navSpeed = 1
+			Zero(keyboard)
+			Zero(mouse)
+			ContextActionService:UnbindAction("FreecamKeyboard")
+			ContextActionService:UnbindAction("FreecamMousePan")
+		end
+	end
+end
+
+local function GetFocusDistance(cameraFrame)
+	local znear = 0.1
+	local viewport = Camera.ViewportSize
+	local projy = 2*math.tan(cameraFov/2)
+	local projx = viewport.x/viewport.y*projy
+	local fx = cameraFrame.rightVector
+	local fy = cameraFrame.upVector
+	local fz = cameraFrame.lookVector
+
+	local minVect = Vector3.new()
+	local minDist = 512
+
+	for x = 0, 1, 0.5 do
+		for y = 0, 1, 0.5 do
+			local cx = (x - 0.5)*projx
+			local cy = (y - 0.5)*projy
+			local offset = fx*cx - fy*cy + fz
+			local origin = cameraFrame.p + offset*znear
+			local _, hit = workspace:FindPartOnRay(Ray.new(origin, offset.unit*minDist))
+			local dist = (hit - origin).magnitude
+			if minDist > dist then
+				minDist = dist
+				minVect = offset.unit
+			end
+		end
+	end
+
+	return fz:Dot(minVect)*minDist
+end
+
+local function StepFreecam(dt)
+	local vel = velSpring:Update(dt, Input.Vel(dt))
+	local pan = panSpring:Update(dt, Input.Pan(dt))
+
+	local zoomFactor = math.sqrt(math.tan(math.rad(70/2))/math.tan(math.rad(cameraFov/2)))
+
+	cameraRot = cameraRot + pan*Vector2.new(0.75, 1)*8*(dt/zoomFactor)
+	cameraRot = Vector2.new(math.clamp(cameraRot.x, -math.rad(90), math.rad(90)), cameraRot.y%(2*math.pi))
+
+	local cameraCFrame = CFrame.new(cameraPos)*CFrame.fromOrientation(cameraRot.x, cameraRot.y, 0)*CFrame.new(vel*Vector3.new(1, 1, 1)*64*dt)
+	cameraPos = cameraCFrame.p
+
+	Camera.CFrame = cameraCFrame
+	Camera.Focus = cameraCFrame*CFrame.new(0, 0, -GetFocusDistance(cameraCFrame))
+	Camera.FieldOfView = cameraFov
+end
+
+local PlayerState = {} do
+	mouseBehavior = ""
+	mouseIconEnabled = ""
+	cameraType = ""
+	cameraFocus = ""
+	cameraCFrame = ""
+	cameraFieldOfView = ""
+
+	function PlayerState.Push()
+		cameraFieldOfView = Camera.FieldOfView
+		Camera.FieldOfView = 70
+
+		cameraType = Camera.CameraType
+		Camera.CameraType = Enum.CameraType.Custom
+
+		cameraCFrame = Camera.CFrame
+		cameraFocus = Camera.Focus
+
+		mouseIconEnabled = UserInputService.MouseIconEnabled
+		UserInputService.MouseIconEnabled = true
+
+		mouseBehavior = UserInputService.MouseBehavior
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	end
+
+	function PlayerState.Pop()
+		Camera.FieldOfView = 70
+
+		Camera.CameraType = cameraType
+		cameraType = nil
+
+		Camera.CFrame = cameraCFrame
+		cameraCFrame = nil
+
+		Camera.Focus = cameraFocus
+		cameraFocus = nil
+
+		UserInputService.MouseIconEnabled = mouseIconEnabled
+		mouseIconEnabled = nil
+
+		UserInputService.MouseBehavior = mouseBehavior
+		mouseBehavior = nil
+	end
+end
+
+function StartFreecam(pos)
+	if inFreecam then
+		StopFreecam()
+	end
+	local cameraCFrame = Camera.CFrame
+	if pos then
+		cameraCFrame = pos
+	end
+	cameraRot = Vector2.new()
+	cameraPos = cameraCFrame.p
+	cameraFov = Camera.FieldOfView
+
+	velSpring:Reset(Vector3.new())
+	panSpring:Reset(Vector2.new())
+
+	PlayerState.Push()
+	RunService:BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, StepFreecam)
+	Input.StartCapture()
+	inFreecam = true
+end
+
+function StopFreecam()
+	if not inFreecam then return end
+	Input.StopCapture()
+	RunService:UnbindFromRenderStep("Freecam")
+	PlayerState.Pop()
+	workspace.Camera.FieldOfView = 70
+	inFreecam = false
+end
+
+-- Commands
+addCommand("fly", function()
+	if temp["fly"] and temp["fly"]["flying"] then return end
+
+	local keybind = "e"
+	local p = plr
+	local c = p.Character
+	local m = p:GetMouse()
+
+	local velo = Instance.new("BodyVelocity")
+	velo.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+	velo.P = 32000
+
+	local gyro = Instance.new("BodyGyro")
+	gyro.D = 250
+	gyro.P = 5000
+	gyro.MaxTorque = Vector3.new(69^5,69^5,69^5)
+
+	local function calc()
+		local cam = workspace.CurrentCamera
+		local p = (cam.CFrame * CFrame.new((CFrame.new(cam.CFrame.p, cam.CFrame.p + Vector3.new(cam.CFrame.lookVector.x, 0, cam.CFrame.lookVector.z)):VectorToObjectSpace(c.Humanoid.MoveDirection)))).p - cam.CFrame.p
+
+		return 	if p == Vector3.zero then p else p.Unit
+
+	end
+
+	local function notif(txt, dur)
+		--local s = game.StarterGui
+		--s:SetCore("SendNotification", {
+		--	Title = "Shave Fly",
+		--	Text = txt,
+		--	Duration = (dur or 2),
+		--})
+		fyNotif(txt, dur)
+	end
+
+	local toggle = true
+	local keycon = m.KeyDown:Connect(function(key)
+		if key:lower() == keybind:lower() then
+			toggle = not toggle
+			if toggle then
+				notif("Toggled on", .5)
+				velo.Parent = c.HumanoidRootPart
+				gyro.Parent = c.HumanoidRootPart
+			else
+				notif("Toggled off", .5)
+				velo.Parent = nil
+				gyro.Parent = nil
+			end
+		end
+	end)
+
+	local con = RunService.RenderStepped:Connect(function()
+		if not toggle then return end
+		if c.Humanoid.MoveDirection ~= Vector3.zero then
+			gyro.CFrame = CFrame.new(c.HumanoidRootPart.Position, c.HumanoidRootPart.Position + calc())
+			velo.Velocity = calc() * 100
+		else
+			velo.Velocity = Vector3.zero
+		end
+	end)
+	temp["fly"] = temp["fly"] and temp["fly"] or {}
+	temp["fly"]["flying"] = true
+	temp["fly"]["connections"] = {con, keycon}
+	temp["fly"]["junk"] = {gyro, velo}
+
+	notif("Shave fly loaded with keybind '".. (keybind or "unknown") .."'")
+	notif("Toggled on", .5)
+	velo.Parent = c.HumanoidRootPart
+	gyro.Parent = c.HumanoidRootPart
+end)
+
+addCommand("unfly", function()
+	if not temp["fly"] or not temp["fly"]["flying"] then return end
+
+	temp["fly"]["flying"] = false
+	for _, v in pairs(temp["fly"]["junk"]) do
+		v:Destroy()
+	end
+
+	for _, v in pairs(temp["fly"]["connections"]) do
+		v:Disconnect()
+	end
+
+	temp["fly"] = nil
+end)
+
+addCommand("speed", function(speed)
+	if tonumber(speed) then
+		char.Humanoid.WalkSpeed = tonumber(speed)
+	end
+end, {"walkspeed", "ws"})
+
+addCommand("jumppower", function(jumppower)
+	if tonumber(jumppower) then
+		char.Humanoid.JumpPower = tonumber(jumppower)
+	end
+end, {"jp"})
+
+addCommand("goto", function(plrName)
+	local p = getPlr(plrName)
+	for _, plr in pairs(p) do
+		char:PivotTo(plr.Character:GetPivot())
+	end
+end, {"to"})
+
+addCommand("gravity", function(gravity)
+	if tonumber(gravity) then
+		workspace.Gravity = tonumber(gravity)
+	end
+end)
+
+addCommand("tptool", function()
+	local t = Instance.new("HopperBin", plr.Backpack)
+	t.Selected:Connect(function(m)
+		m.Button1Down:Connect(function()
+			char.HumanoidRootPart.CFrame = CFrame.new(m.Hit.Position + Vector3.new(0,3,0))
+		end)
+	end)
+	t.Name = "Teleport"
+end)
+
+addCommand("sit", function()
+	char.Humanoid.Sit = true
+end)
+
+addCommand("noclip", function()
+	temp["noclip"] = temp["noclip"] and temp["noclip"] or {}
+	temp["noclip"]["connections"] = temp["noclip"]["connections"] and temp["noclip"]["connections"] or {}
+
+	local con = RunService.RenderStepped:Connect(function()
+		for _, v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end)
+
+	table.insert(temp["noclip"]["connections"], con)
+end)
+
+addCommand("hidefy", function()
+	fyHidden = true
+	fyNotif("kurdhub hidden - command bar is still active", 2)
+	minimizeUi()
+end)
+
+addCommand("showfy", function()
+	fyHidden = false
+	minimizeUi()
+end)
+
+addCommand("clip", function()
+	if not temp["noclip"] or not temp["noclip"]["connections"] then return end
+	for _,v in pairs(temp["noclip"]["connections"]) do
+		v:Disconnect()
+	end
+
+	for _, v in pairs(char:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.CanCollide = true
+		end
+	end
+end)
+
+addCommand("notify", function(txt, ...)
+	txt = txt.. " ".. table.concat({...}, " ")
+	local dur = txt:split(" dur:")
+	local message, duration = "", ""
+	if dur[2] then
+		duration = dur[2]
+	end
+	message = dur[1]
+
+	fyNotif(message, tonumber(duration))
+end)
+
+addCommand("freecam", function()
+	StartFreecam()
+end, {"fc"})
+
+addCommand("unfreecam", function()
+	StopFreecam()
+end, {"unfc"})
+
+addCommand("infinitejump", function()
+	if temp["infjump"] then return end
+	local db = false
+	local con = UserInputService.JumpRequest:Connect(function()
+		db = true
+		char:FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+		wait()
+		db = false
+	end)
+	temp["infjump"] = con
+end, {"infjump"})
+
+addCommand("uninfinitejump", function()
+	if temp["infjump"] then
+		temp["infjump"]:Disconnect()
+		temp["infjump"] = nil
+	end
+end, {"uninfjump"})
+
+addCommand("version", function()
+	fyNotif("Loaded kurdhub version: v"..fy_version, 2)
+end)
+
+addCommand("credits", function()
+	fyNotif("kurdhub "..fy_version.." by OfficiaI_Zeus")
+end)
+
+addCommand("reach", function(distance)
+	for _,v in pairs(char:GetDescendants()) do
+		if v:IsA("Tool") and v:FindFirstChild("Handle") then
+			commands.unreach(); wait()
+			temp["reach"] = temp["reach"] and temp["reach"] or {}
+			local sel = Instance.new("SelectionBox")
+			temp["reach"][v] = {v.Handle.Size, v.GripPos, sel}
+			sel.Name = "Reach"
+			sel.Parent = v.Handle
+			sel.Adornee = v.Handle
+			v.Handle.Massless = true -- prevent really weird balance throwoff
+			v.Handle.Size = Vector3.new(0.5,0.5,(tonumber(distance) or 50))
+			v.GripPos = Vector3.new(0,0,0) -- make tool forwards
+			while sel.Parent do
+				local col = Color3.fromHSV(tick() % 10/10, 1, 1)
+				sel.Color3 = col
+				wait(1/10)
+			end
+		end
+	end
+end)
+
+addCommand("unreach", function()
+	if not temp["reach"] then return end
+	for _,v in pairs(char:GetDescendants()) do
+		if v:IsA("Tool") and v:FindFirstChild("Handle") and temp["reach"][v] then
+			v.Handle.Size = temp["reach"][v][1]
+			v.Handle.Massless = false
+			v.GripPos = temp["reach"][v][2]
+			temp["reach"][v][3]:Destroy()
+			temp["reach"][v] = nil
+		end
+	end
+end)
+
+addCommand("unlockworkspace", function()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.Locked = false
+		end
+	end
+	fyNotif("Unlocked workspace", 1)
+end, {"unlockws"})
+
+addCommand("lockworkspace", function()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.Locked = true
+		end
+	end
+	fyNotif("Locked workspace", 1)
+end, {"lockws"})
+
+addCommand("btools", function()
+	for i = 1, 4 do
+		Instance.new("HopperBin", plr.Backpack).BinType = i
+	end
+end)
+
+addCommand("clearerrors", function()
+	GuiService:ClearError() -- lol
+	fyNotif("GUI errors cleared", 2)
+end, {"fixerrors"})
+
+addCommand("antilocalkick", function()
+	if not hookmetamethod then 
+		return fyNotif("Command not ran - your executor doesn't have hookmetamethod", 3.5)
+	end
+
+	local ting, otherting = nil, nil
+	ting = hookmetamethod(game, "__index", function(self, method)
+		if self == plr and method:lower() == "kick" then
+			return error("L noob cant kick me", 2)
+		end
+		return ting(self, method)
+	end)
+	otherting = hookmetamethod(game, "__namecall", function(self, ...)
+		if self == plr and getnamecallmethod():lower() == "kick" then
+			return
+		end
+		return otherting(self, ...)
+	end)
+
+	fyNotif("You are now unkickable from localscripts.", 2)
+end, {"anticlientkick"})
+
+addCommand("rejoin", function() 
+	if #Players:GetPlayers() <= 1 then
+		plr:Kick("Rejoining place")
+		wait()
+		TeleportService:Teleport(game.PlaceId, plr)
+	else
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, plr)
+	end
+end, {"rj"})
+
+addCommand("maxzoom",function(dist)
+	plr.CameraMaxZoomDistance = tonumber(dist) or plr.CameraMaxZoomDistance
+end)
+
+addCommand("minzoom", function(dist)
+	plr.CameraMaxZoomDistance = tonumber(dist) or plr.CameraMaxZoomDistance
+end)
+
+addCommand("setprefix", function(newPrefix)
+	local newPrefixKeyCode = getKeycodeFromString(newPrefix)
+	if newPrefixKeyCode then
+		prefix = {newPrefixKeyCode, newPrefix:lower()}
+	else
+		fyNotif("Unable to set prefix to "..newPrefix)
+	end
+
+	table.remove(binds, bindIndice)
+
+	bindIndice = bindToKey(prefix[1], function()
+		main.CommandBar:CaptureFocus()
+	end, true)
+
+	print(binds)
+end)
+
+addCommand("jobid", function()
+	fyNotif("Copied jobid to clipboard", 1.5)
+	CopyToClipboard(game.JobId)
+end)
+
+addCommand("placeid", function()
+	fyNotif("Copied placeid to clipboard", 1.5)
+	CopyToClipboard(game.PlaceId)
+end)
+
+addCommand("universeid", function()
+	fyNotif("Copied universeid to clipboard", 1.5)
+	CopyToClipboard(game.GameId)
+end)
+
+addCommand("exit", function()
+	game:Shutdown()
+end, {"killroblox"})
+
+addCommand("spin",function(speed)
+	commands["unspin"]()
+	temp["spin"] = temp["spin"] and temp["spin"] or {}
+	local Spin = Instance.new("BodyAngularVelocity")
+	Spin.Name = "Spin"
+	Spin.Parent = char.HumanoidRootPart
+	Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+	Spin.AngularVelocity = Vector3.new(0,(speed or 10),0)
+	table.insert(temp["spin"], Spin)
+end)
+
+addCommand("unspin",function()
+	if temp["spin"] then
+		for _,v in pairs(temp["spin"]) do
+			v:Destroy()
+		end
+	end
+end)
+
+addCommand("hipheight",function(height)
+	char.Humanoid.HipHeight = (height or char.Humanoid.HipHeight)
+end, {"hh"})
+
+addCommand("view",function(plrName)
+	local plrs = getPlr(plrName)
+	for _, plr in pairs(plrs) do
+		workspace.CurrentCamera.CameraSubject = plr.Character.Humanoid
+	end
+end, {"spectate", "watch"})
+
+addCommand("unview", function()
+	workspace.CurrentCamera.CameraSubject = plr.Character.Humanoid
+end, {"unspectate", "unwatch"})
+
+addCommand("esp", function()
+	commands["unesp"]()
+	temp["esp"] = temp["esp"] and temp["esp"] or {}
+	temp["esp"]["plrs"] = {}
+	temp["esp"]["objs"] = {}
+
+	-- Config
+	local espOffset = CFrame.new(0,-.5,0)
+	local boxSize 	= Vector3.new(4,6,0)
+
+	-- Vars
+	local cam = workspace.CurrentCamera
+	local plr = Players.LocalPlayer
+	local mouse = plr:GetMouse()
+	local toviewpoint = cam.WorldToViewportPoint
+	local v3 = Vector3.new
+
+	local function newDrawing(drawing, props)
+		local d = Drawing.new(drawing)
+
+		for prop, val in pairs(props) do
+			d[prop] = val
+		end
+		table.insert(temp["esp"]["objs"], d)
+
+		return d
+	end
+
+	local function createEspThing(plr: Player)
+		local espData = {}
+
+		espData["Box"] = newDrawing("Quad", {
+			Thickness = 3,
+			Color = Color3.new(1,0,0),
+			Transparency = 1,
+			Filled = false,
+			Visible = true,
+		})
+		espData["Username"] = newDrawing("Text", {
+			Text = plr.Name,
+			Color = plr.TeamColor.Color,
+			Center = true,
+			Outline = true,
+			Size = 19,
+			Visible = true
+		})
+		espData["Distance"] = newDrawing("Text", {
+			Text = "Loading..",
+			Color = plr.TeamColor.Color,
+			Center = true,
+			Outline = true,
+			Size = 19,
+			Visible = true
+		})
+		local isTeammate = plr.Team==Players.LocalPlayer.Team
+		espData["Tag"] = newDrawing("Text", {
+			Text = isTeammate and "[Teammate]" or "[Enemy]",
+			Color = plr.TeamColor.Color,
+			Center = true,
+			Outline = true,
+			Size = 19,
+			Visible = true
+		})
+
+		espData.Update = function(self)
+			local cf = plr.Character and plr.Character.PrimaryPart.CFrame or CFrame.new()
+			local size = boxSize
+			local self = espData
+			local locs = {
+				TopLeft = cf * espOffset * CFrame.new(size.X/2,size.Y/2,0),
+				TopRight = cf * espOffset * CFrame.new(-size.X/2,size.Y/2,0),
+				BottomLeft = cf * espOffset * CFrame.new(size.X/2,-size.Y/2,0),
+				BottomRight = cf * espOffset * CFrame.new(-size.X/2,-size.Y/2,0),
+				TagPos = cf * espOffset * CFrame.new(0,size.Y/2,0),
+				Torso = cf * espOffset
+			}
+
+			local TopLeft, Vis1 = toviewpoint(cam, locs.TopLeft.p)
+			local TopRight, Vis2 = toviewpoint(cam, locs.TopRight.p)
+			local BottomLeft, Vis3 = toviewpoint(cam, locs.BottomLeft.p)
+			local BottomRight, Vis4 = toviewpoint(cam, locs.BottomRight.p)
+
+			if plr.Character then
+				if Vis1 or Vis2 or Vis3 or Vis4 then
+					self.Box.Visible = true
+					self.Box.PointA = Vector2.new(TopRight.X, TopRight.Y)
+					self.Box.PointB = Vector2.new(TopLeft.X, TopLeft.Y)
+					self.Box.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
+					self.Box.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
+					self.Box.Color = plr.TeamColor.Color
+				else
+					self.Box.Visible = false
+				end
+			end
+
+			local TagPos, Vis5 = toviewpoint(cam, locs.TagPos.p)
+			local plrIsTeammate = plr.Team==Players.LocalPlayer.Team
+
+			if Vis5 then
+				self.Username.Visible = true
+				self.Username.Position = Vector2.new(TagPos.X, TagPos.Y)
+				self.Username.Text = plr.Name
+				self.Username.Color = plr.TeamColor.Color
+
+				self.Distance.Visible = true
+				self.Distance.Position = Vector2.new(TagPos.X, TagPos.Y + 15)
+				self.Distance.Text = math.floor((cam.CFrame.p - cf.p).magnitude) .." studs away"
+				self.Distance.Color = plr.TeamColor.Color
+
+				self.Tag.Visible = true
+				self.Tag.Position = Vector2.new(TagPos.X, TagPos.Y + 30)
+				self.Tag.Text = plrIsTeammate and "[Teammate]" or "[Enemy]"
+				self.Tag.Color = plr.TeamColor.Color
+			else
+				self.Username.Visible = false
+				self.Distance.Visible = false
+			end
+		end
+
+		temp["esp"]["plrs"][plr] = espData
+		return espData
+	end
+
+	local function handle(plr: Player)
+		local plrEsp = createEspThing(plr)
+		print("[FiniteESP]: Connected to player " .. plr.Name)
+	end
+
+	Players.PlayerRemoving:Connect(function(plr)
+		if temp["esp"] and temp["esp"]["plrs"] then
+			destroyDrawingObject(temp["esp"]["plrs"][plr].Username)
+			destroyDrawingObject(temp["esp"]["plrs"][plr].Distance)
+			destroyDrawingObject(temp["esp"]["plrs"][plr].Box)
+			destroyDrawingObject(temp["esp"]["plrs"][plr].Tag)
+			temp["esp"]["plrs"][plr] = nil
+			print("[FiniteESP]: Disconnected from player ".. plr.Name)
+		end
+	end)
+
+	Players.PlayerAdded:Connect(handle)
+	for _,v in pairs(Players:GetPlayers()) do
+		if v ~= plr then
+			handle(v)
+		end
+	end
+
+	local updateCon = RunService.RenderStepped:Connect(function()
+		for plr,espData in pairs(temp["esp"]["plrs"]) do
+			espData.Update()
+		end
+	end)
+	temp["esp"]["connection"] = updateCon
+
+	print("[FiniteESP]: ESP enabled")
+end)
+
+addCommand("unesp", function()
+	if not temp["esp"] then return end
+	temp["esp"]["connection"]:Disconnect()
+	print("[FiniteESP]: Disconnected from update loop")
+	temp["esp"]["connection"] = nil
+
+	for i, v in pairs(temp["esp"]["plrs"]) do
+		destroyDrawingObject(v.Username)
+		destroyDrawingObject(v.Distance)
+		destroyDrawingObject(v.Box)
+		destroyDrawingObject(v.Tag)
+		temp["esp"][i] = nil
+		print("[FiniteESP]: Disconnected from player ".. i.Name)
+	end
+
+	for _, drawing in pairs(temp["esp"]["objs"]) do
+		destroyDrawingObject(drawing)
+	end
+
+	table.clear(temp["esp"])
+	temp["esp"] = nil
+	print("[FiniteESP]: ESP disabled")
+	print(temp["esp"])
+end)
+
+addCommand("swim", function()
+	if temp["swim"] then return end
+	if char and char:FindFirstChildWhichIsA("Humanoid") then
+		temp["swim"] = temp["swim"] and temp["swim"] or {}
+		temp["swim"]["gravity"] = workspace.Gravity
+		temp["swim"]["connections"] = {}
+		workspace.Gravity = 0
+
+		local function swimreset()
+			commands["unswim"]()
+		end
+
+		local hum = char:FindFirstChildWhichIsA("Humanoid")
+		local fix = hum.Died:Connect(swimreset)
+		table.insert(temp["swim"]["connections"], fix)
+		local enums = Enum.HumanoidStateType:GetEnumItems()
+		table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
+		table.remove(enums, table.find(enums, Enum.HumanoidStateType.Dead))
+
+		for i, v in pairs(enums) do
+			hum:SetStateEnabled(v, false)
+		end
+
+		hum:ChangeState(Enum.HumanoidStateType.Swimming)
+		local swimcon = RunService.Heartbeat:Connect(function()
+			pcall(function()
+				char.HumanoidRootPart.Velocity = ((hum.MoveDirection ~= Vector3.new() or UserInputService:IsKeyDown(Enum.KeyCode.Space)) and char.HumanoidRootPart.Velocity or Vector3.new())
+			end)
+		end)
+
+		table.insert(temp["swim"]["connections"],swimcon)
+	end
+end)
+
+addCommand("unswim", function()
+	if temp["swim"] then
+		workspace.Gravity = temp["swim"]["gravity"]
+		for i,v in pairs(temp["swim"]["connections"]) do
+			v:Disconnect()
+			temp["swim"] = nil
+		end
+
+		local enums = Enum.HumanoidStateType:GetEnumItems()
+		table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
+		for i, v in pairs(enums) do
+			char.Humanoid:SetStateEnabled(v, true)
+		end		
+	end
+end)
+
+-- bang scripts are garbage
+-- funny little bait bang script
+addCommand("bang", function(plrName)
+	local exp = Instance.new("Explosion", char)
+	fyNotif("You are disgusting")
+	exp.Position = char.Head.Position
+	char:breakJoints()
+end, {"facebang"})
+
+addCommand("setownerid", function()
+	if game.CreatorType == Enum.CreatorType.User then
+		plr.UserId = game.CreatorId
+		fyNotif("UserID set to "..game.CreatorId)
+	elseif game.CreatorType == Enum.CreatorType.Group then
+		local OwnerID = GroupService:GetGroupInfoAsync(game.CreatorId).Owner.Id
+		plr.UserId = OwnerID
+		fyNotif("UserID set to "..OwnerID)
+	end
+end, {"setcreatorid"})
+
+addCommand("render", function()
+	RunService:Set3dRenderingEnabled(true)
+end, {"enablerendering"})
+
+addCommand("norender", function()
+	RunService:Set3dRenderingEnabled(false)
+end, {"disablerendering"})
+
+addCommand("animation", function(animid, speed)
+	if tonumber(animid) then
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://"..animid
+		local loadedAnim = char:FindFirstChildOfClass("Humanoid"):LoadAnimation(anim)
+		loadedAnim:Play()
+		if tonumber(speed) then
+			loadedAnim:AdjustSpeed(speed)
+		end
+	end
+end, {"anim"})
+
+addCommand("teleportunanchored", function(plrName)
+	temp["tpua"] = temp["tpua"] and temp["tpua"] or {}
+	local plrs = getPlr(plrName)
+
+	if SetSimRadius or SetHiddenProp then
+		commands["setsimulationradius"]()
+	end
+
+	for _, p in pairs(plrs) do
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") and v.Anchored == false and not Players:GetPlayerFromCharacter(v.Parent) and not v:IsDescendantOf(char) then
+				if v:FindFirstChildOfClass("BodyPosition") or v:FindFirstChildOfClass("BodyGyro") then
+					v:Destroy()
+				end
+
+				local pos = Instance.new("BodyPosition", v)
+				pos.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+				pos.Position = p.Character:FindFirstChild("Head").Position or Vector3.new(0,0,0) -- lol
+
+				table.insert(temp["tpua"], pos)
+			end
+		end
+	end
+end, {"tpua"})
+
+addCommand("thawunanchored", function()
+	if temp["tpua"] then
+		for _, v in pairs(temp["tpua"]) do
+			v:Destroy()
+		end
+		temp["tpua"] = nil
+	end
+end, {"thawua"})
+
+addCommand("chat", function(text, ...)
+	local othertxt = {...}
+	local msg = text .. (othertxt[1] and (" " .. table.concat(othertxt, " ")) or "")
+
+	while string.find(msg, "%%rand%%") do
+		msg = string.gsub(msg, "%%rand%%", randomString(), 1)
+	end
+
+	if isOldChat then
+		chatRemote:FireServer(msg, "All")
+	else
+		chatChannel:SendAsync(msg)
+	end
+end, {"say"})
+
+local spamSpeed = 1
+addCommand("spam", function(text, ...)
+	temp["spam"] = temp["spam"] and temp["spam"] or true
+	while temp["spam"] do
+		wait(spamSpeed)
+		if temp["spam"] == false then break end
+		commands["chat"](text,...)
+	end
+end)
+
+addCommand("spamspeed", function(speed)
+	spamSpeed = tonumber(speed) and speed or spamSpeed
+	fyNotif("Spam speed set to ".. speed)
+end)
+
+addCommand("unspam", function()
+	temp["spam"] = false
+end)
+
+addCommand("unctest", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/unified-naming-convention/NamingStandard/main/UNCCheckEnv.lua"))()	
+end, {"testunc","checkunc"})
+
+addCommand("vulnerabilitycheck", function()
+	loadstring(game:HttpGet("https://pastebin.com/raw/SVDAQFA2"))()
+end, {"testvulns","vulncheck"})
+
+addCommand("nofog", function()
+	Lighting.FogEnd = 100000 -- default fogend
+
+	for _,v in pairs(Lighting:GetDescendants()) do
+		if v:IsA("Atmosphere") then
+			v:Destroy()
+		end
+	end
+end, {"removefog"})
+
+addCommand("night", function()
+	Lighting.ClockTime = 0
+end)
+
+addCommand("day", function()
+	Lighting.ClockTime = 14
+end)
+
+addCommand("ping", function()
+	fyNotif("Ping: " .. math.round(plr:GetNetworkPing() * 1000) .. "ms", 2)
+end)
+
+addCommand("fullbright",function()
+	-- load default lighting lol
+	Lighting.Brightness = 2
+	Lighting.ClockTime = 14
+	Lighting.FogEnd = 100000
+	Lighting.GlobalShadows = false
+	Lighting.Ambient = Color3.fromRGB(138, 138, 138)
+	Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+	Lighting.FogColor = Color3.fromRGB(192, 192, 192)
+end, {"fb"})
+
+addCommand("userid", function(plrName)
+	local plrs = getPlr(plrName)
+	for _, v in pairs(plrs) do
+		fyNotif(v.Name .. "'s UserID: " .. v.UserId, 2)
+	end
+end, {"id"})
+
+addCommand("accountage", function(plrName)
+	local plrs = getPlr(plrName)
+	for _, v in pairs(plrs) do
+		fyNotif(v.Name .. "'s account age: " .. v.AccountAge.." days", 2)
+	end
+end, {"age"})
+
+addCommand("tools", function()
+	local toolsArea = {ReplicatedStorage, Lighting}
+	for _, service in pairs(toolsArea) do
+		for _, v in pairs(service:GetDescendants()) do
+			if v:IsA("Tool") or v:IsA("HopperBin") then
+				v:Clone().Parent = plr.Backpack
+			end
+		end
+	end
+end, {"gettools"})
+
+addCommand("enableshiftlock", function()
+	plr.DevEnableMouseLock = true
+	fyNotif("Shiftlock has been enabled", 2)
+end, {"enablesl"})
+
+addCommand("fov", function(fov)
+	workspace.CurrentCamera.FieldOfView = tonumber(fov) or 70
+end)
+
+addCommand("gametp", function(placeid)
+	if tonumber(placeid) then
+		TeleportService:Teleport(placeid, plr)
+	end
+end, {"gotoplace"})
+
+addCommand("cancelteleport", function()
+	TeleportService:TeleportCancel()
+end, {"canceltp"})
+
+addCommand("respawn", function()
+	if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
+	task.wait()
+	char:ClearAllChildren()
+	local newChar = Instance.new("Model")
+	newChar.Parent = workspace
+	plr.Character = newChar
+	task.wait()
+	plr.Character = char
+	newChar:Destroy()
+end)
+
+addCommand("refresh", function()
+	local hum = char and char:FindFirstChildOfClass("Humanoid", true)
+	local charPos = hum and hum.RootPart and hum.RootPart.CFrame
+	local camPos = workspace.CurrentCamera.CFrame
+	commands["respawn"]()
+	task.wait()
+	task.spawn(function()
+		plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, workspace.CurrentCamera.CFrame = charPos, task.wait() and camPos
+	end)
+end, {"re"})
+
+addCommand("reset", function()
+	char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Dead)
+end)
+
+addCommand("orbit", function(plrName, speed, distance)
+	local rotation = 0
+	local speed = speed or 7.5
+	local distance = distance or 5
+	local target = getPlr(plrName)[1]
+	local humanoid = char:FindFirstChildWhichIsA("Humanoid")	
+	local root = char:FindFirstChildOfClass("Humanoid").RootPart
+
+	if target and target.Character then
+		temp["orbit"] = temp["orbit"] and temp["orbit"] or {}
+		local con = RunService.RenderStepped:Connect(function()
+			pcall(function()
+				rotation = rotation + speed
+				root.CFrame = CFrame.new(target.Character:FindFirstChildOfClass("Humanoid").RootPart.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(distance, 0, 0)
+			end)
+		end)
+		table.insert(temp["orbit"], con)
+
+		con = RunService.RenderStepped:Connect(function()
+			pcall(function()
+				root.CFrame = CFrame.new(root.Position, target.Character:FindFirstChildOfClass("Humanoid").RootPart.Position)
+			end)
+		end)
+		table.insert(temp["orbit"], con)
+
+		con = humanoid.Died:Connect(function() commands["unorbit"]() end)
+		table.insert(temp["orbit"], con)
+
+		con = humanoid.Seated:Connect(function(seated) if seated then commands["unorbit"]() end end)
+		table.insert(temp["orbit"], con)
+	end
+end)
+
+addCommand("unorbit", function()
+	if temp["orbit"] then
+		for _,v in pairs(temp["orbit"]) do
+			pcall(function() v:Disconnect() end)
+		end
+		temp["orbit"] = nil
+	end
+end)
+
+addCommand("antiidle", function()
+	local getCons = (getconnections or get_signal_cons)
+	if getCons then
+		for i,v in pairs(getCons(Players.LocalPlayer.Idled)) do
+			if v["Disable"] then
+				v["Disable"](v)
+			elseif v["Disconnect"] then
+				v["Disconnect"](v)
+			end
+		end
+	else
+		-- hacky method, force an input when an idle event is fired
+		Players.LocalPlayer.Idled:Connect(function()
+			VirtualUser:CaptureController()
+			VirtualUser:ClickButton2(Vector2.new())
+		end)
+	end
+end, {"antiafk"})
+
+addCommand("fling", function()
+	temp["fling"] = temp["fling"] and temp["fling"] or {}
+	for _, v in pairs(char:GetDescendants()) do
+		if v:IsA("BasePart") then
+			--												  dens  fric  elas
+			v.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
+		end
+	end
+
+	commands["noclip"]() -- run noclip so we're unflingable
+
+	local fling = Instance.new("BodyAngularVelocity")
+	fling.Parent = char.HumanoidRootPart
+	fling.AngularVelocity = Vector3.new(0,99999,0)
+	fling.MaxTorque = Vector3.new(0,math.huge,0)
+	fling.P = math.huge
+	temp["fling"]["velocity"] = fling
+
+	for i, v in pairs(char:GetChildren()) do
+		if v:IsA("BasePart") then
+			v.CanCollide = false
+			v.Massless = true
+			v.Velocity = Vector3.new(0, 0, 0)
+		end
+	end
+
+	local con = char:FindFirstChildOfClass('Humanoid').Died:Connect(function() commands["unfling"]() end)
+	temp["fling"]["connection"] = con
+	temp["fling"]["active"] = true
+
+	while temp["fling"] and temp["fling"]["active"] do
+		if not temp["fling"] or not temp["fling"]["active"] then return end
+		fling.AngularVelocity = Vector3.new(0, 99999, 0)
+		task.wait(.2) -- for stability purposes
+		fling.AngularVelocity = Vector3.new(0,0,0)
+		task.wait(.1)
+	end
+end)
+
+addCommand("unfling", function()
+	if temp["fling"] then
+		temp["fling"]["connection"]:Disconnect()
+		temp["fling"]["velocity"]:Destroy()
+		temp["fling"]["active"] = false
+
+		for i,v in pairs(char:GetChildren()) do
+			if v:IsA("BasePart") then
+				v.Massless = false
+				v.Velocity = Vector3.new(0, 0, 0)
+			end
+		end
+
+		for _, v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				--												  dens  fric  elas
+				v.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+			end
+		end
+
+		commands["clip"]()
+	end
+	temp["fling"] = nil
+end)
+
+addCommand("saveinstance", function()
+	if saveinstance then
+		saveinstance()
+	else
+		loadstring(game:HttpGet("https://pastebin.com/raw/8HPkX5Qm"))()
+	end
+end, {"saveplace", "savegame"})
+
+addCommand("serverhop", function()
+	local servers = {}
+	local res = game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true")
+	local data = HttpService:JSONDecode(res)
+
+	if data and data.data then
+		for i, v in pairs(data.data) do
+			if type(v) == "table" then
+				if (tonumber(v.playing) and tonumber(v.maxPlayers)) and (v.playing < v.maxPlayers) and (v.id ~= game.JobId) then
+					table.insert(servers, v.id)
+				end
+			end
+		end
+	end
+
+	if #servers > 0 then
+		fyNotif("Server found, teleporting..", 1.5)
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
+	else
+		fyNotif("No servers found.", 2)
+	end
+end, {"shop"})
+
+addCommand("fpscap", function(fps)
+	if setfpscap then
+		local newFps = tonumber(fps) or 60
+		setfpscap(newfps)
+		fyNotif("FPS capped to " ..newFps)
+	else
+		fyNotif("Command not supported - Missing setfpscap")
+	end
+end, {"setfps"})
+
+addCommand("fps", function()
+	RunService.RenderStepped:Wait()
+	local fps = 0
+	for i = 1, 5 do
+		fps += 1 / RunService.RenderStepped:Wait()
+	end
+	fyNotif("Your current FPS is " .. math.round(fps / 5))
+end)
+
+addCommand("unlockfps", function()
+	if setfpscap then
+		setfpscap(0)
+	else
+		fyNotif("Command not supported - Missing setfpscap")
+	end
+end)
+
+addCommand("setsimulationradius", function()
+	if temp["setsimradius"] then return end
+
+	if SetSimRadius or SetHiddenProp then	
+		local setsim = function(simradius, maxsimradius)
+			if SetSimRadius then
+				SetSimRadius(1e308, 1/0)
+			else
+				SetHiddenProp(plr, "MaximumSimulationRadius",1/0)
+				SetHiddenProp(plr, "SimulationRadius", 1e308)
+			end
+		end
+		local con = RunService.Stepped:Connect(setsim)
+		temp["setsimradius"] = con
+	else
+		fyNotif("Command not supported - Missing " .. (SetSimRadius and "gethiddenproperty" or "setsimulationradius"))
+	end
+end, {"setsim", "setsimradius"})
+
+addCommand("resetsimulationradius", function()
+	if temp["setsimradius"] then
+		temp["setsimradius"]:Disconnect()
+		temp["setsimradius"] = nil
+		RunService.Stepped:Wait()
+		if SetSimRadius then
+			SetSimRadius(139,139)
+		else	
+			SetHiddenProp(plr, "MaximumSimulationRadius",139)
+			SetHiddenProp(plr, "SimulationRadius", 139)
+		end
+	end
+end, {"unsimradius", "unsim"})
+
+addCommand("remotespy", function()
+	loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
+end, {"rspy"})
+
+addCommand("dex", function()
+	loadstring(game:HttpGet("https://pastebin.com/raw/LUkM8Xhn"))()
+end, {"explorer"})
+
+addCommand("audiologger", function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/Applehollyday7/Roblox-Audio-logger/main/Main'))()
+end)
+
+addCommand("antibang", function()
+	if temp["antibang"] then return end
+	temp["antibang"] = workspace.FallenPartsDestroyHeight
+	workspace.FallenPartsDestroyHeight = 1e308
+	local oldPos = char:GetPivot()
+	char:PivotTo(CFrame.new(0,temp["antibang"]-69,0))
+	wait(1)
+	char:PivotTo(oldPos)
+	workspace.FallenPartsDestroyHeight = temp["antibang"]
+	temp["antibang"] = nil
+end)
+
+addCommand("antifling", function()
+	if temp["antifling"] then return end
+	local con = nil
+	temp["antifling"] = {}
+
+	local function PlayerAdded(Player)
+		local Detected = false
+		local Character;
+		local PrimaryPart;
+
+		local function CharacterAdded(NewCharacter)
+			Character = NewCharacter
+			repeat
+				wait()
+				PrimaryPart = NewCharacter:FindFirstChild("HumanoidRootPart")
+			until PrimaryPart
+			Detected = false
+		end
+
+		CharacterAdded(Player.Character or Player.CharacterAdded:Wait())
+		con = Player.CharacterAdded:Connect(CharacterAdded)
+		table.insert(temp["antifling"], con)
+		con = RunService.RenderStepped:Connect(function()
+			if (Character and Character:IsDescendantOf(workspace)) and (PrimaryPart and PrimaryPart:IsDescendantOf(Character)) then
+				if PrimaryPart.AssemblyAngularVelocity.Magnitude > 50 or PrimaryPart.AssemblyLinearVelocity.Magnitude > 100 then
+					Detected = true
+					for i,v in pairs(Character:GetDescendants()) do
+						if v:IsA("BasePart") then
+							v.CanCollide = false
+							v.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							v.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+							v.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0, 0)
+						end
+					end
+					PrimaryPart.CanCollide = false
+					PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+					PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+					PrimaryPart.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0, 0)
+				end
+			end
+		end)
+		table.insert(temp["antifling"], con)
+	end
+
+	for i,v in pairs(Players:GetPlayers()) do
+		if v ~= plr then
+			PlayerAdded(v)
+		end
+	end
+	con = Players.PlayerAdded:Connect(PlayerAdded)
+	table.insert(temp["antifling"], con)
+
+	local LastPosition = nil
+	con = RunService.RenderStepped:Connect(function()
+		pcall(function()
+			local PrimaryPart = char.PrimaryPart
+			if PrimaryPart.AssemblyLinearVelocity.Magnitude > 250 or PrimaryPart.AssemblyAngularVelocity.Magnitude > 250 then
+				PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+				PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				PrimaryPart.CFrame = LastPosition
+			elseif PrimaryPart.AssemblyLinearVelocity.Magnitude < 50 or PrimaryPart.AssemblyAngularVelocity.Magnitude > 50 then
+				LastPosition = PrimaryPart.CFrame
+			end
+		end)
+	end)
+	table.insert(temp["antifling"], con)
+end)
+
+addCommand("unantifling", function()
+	if not temp["antifling"] then return end
+	for i,v in pairs(temp["antifling"]) do
+		v:Disconnect()
+	end
+end)
+
+addCommand("lua", function(...)
+	local code = table.concat({...}," ")
+	local func = loadstring(code)
+	if func then
+		local ran,ret = pcall(func)
+		if ran then
+			fyNotif("Code ran successfully and returned ".. ret)
+		else
+			fyNotif(ret, 4.20)
+		end
+	else
+		fyNotif("Invalid Lua code", 2)
+	end
+end, {"run", "execute"})
+
+addCommand("fireclickdetectors", function(cdName)
+	if not fireclickdetector then
+		fyNotif("Command not supported - Missing fireclickdetector")
+		return
+	end
+
+	if cdName then
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("ClickDetector") and v.Name == cdName or v.Parent.Name == cdName then
+				fireclickdetector(v)
+			end
+		end
+	else
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("ClickDetector") then
+				fireclickdetector(v)
+			end
+		end
+	end
+
+end, {"firecd"})
+
+addCommand("removecdlimits", function()
+	for i,v in pairs(workspace:GetDescendants()) do
+		if v:IsA("ClickDetector") then
+			v.MaxActivationDistance = math.huge
+		end
+	end
+end, {"nocdlimits"})
+
+addCommand("firetouchinterests", function(tiName)
+	if not firetouchinterest then
+		fyNotif("Command not supported - Missing firetouchinterest")
+		return
+	end
+	
+	local root = char.Humanoid.RootPart
+
+	local function touch(interest)
+		local part = interest:FindFirstAncestorWhichIsA("BasePart")
+		if part then
+			task.spawn(function()
+				firetouchinterest(x, root, 1)
+				task.wait()
+				firetouchinterest(x, root, 0)
+			end)
+		end
+	end
+
+	if tiName then
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("TouchTransmitter") and v.Name == tiName or v.Parent.Name == tiName then
+				touch(v)
+			end
+		end
+	else
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("TouchTransmitter") then
+				touch(v)
+			end
+		end
+	end
+end, {"fireti", "touchinterests"})
+
+-- Final init
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, false)
+print(" " .. tick()-benchmark .. " seconds.")
+fyNotif(getn(commands) .. "")
+wait(.5)
+fyNotif("Welcome, "..plr.Name.."")
+gui.Name = randomString()
+gui.Parent = getHiddenUI()
+
+-- Return API
+local API = {
+	RunCommand = function(cmd, ...)
+		if commands[cmd] then
+			commands[cmd](...)
+		else
+			warn("Command" .. cmd .. " halya", 1.5)
+		end
+	end,
+}
+
+if getgenv then getgenv().FYAPI = API end
+return API
