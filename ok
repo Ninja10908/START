@@ -1,0 +1,100 @@
+local function getCountryCode()
+    local success, result = pcall(function()
+        local response = game:HttpGet("http://ip-api.com/json/?fields=countryCode")
+        local data = game:GetService("HttpService"):JSONDecode(response)
+        return data.countryCode
+    end)
+    
+    if success then
+        return result
+    else
+        return "Unknown"
+    end
+end
+if getCountryCode() == "IQ" then
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "JackStorePremium"
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    ScreenGui.ResetOnSpawn = false
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0, 340, 0, 200)
+    Main.Position = UDim2.new(0.5, -170, 0.5, -100)
+    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    Main.BackgroundTransparency = 0.1
+    Main.BorderSizePixel = 0
+    Main.Parent = ScreenGui
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 20)
+    UICorner.Parent = Main
+
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(255, 0, 0)
+    UIStroke.Thickness = 2
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    UIStroke.Parent = Main
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 45)
+    Title.Text = "https://jack827.page.gd"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 20
+    Title.Font = Enum.Font.GothamBold
+    Title.BackgroundTransparency = 1
+    Title.Parent = Main
+
+    local Desc = Instance.new("TextLabel")
+    Desc.Size = UDim2.new(1, -40, 0, 70)
+    Desc.Position = UDim2.new(0, 20, 0, 50)
+    Desc.Text = "بۆ کڕینی Robux و Brainrot بە هەرزانترین نرخ سەردانی وێبسایتەکەمان بکە"
+    Desc.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Desc.TextSize = 17
+    Desc.Font = Enum.Font.Roboto
+    Desc.TextWrapped = true
+    Desc.LineHeight = 1.2
+    Desc.BackgroundTransparency = 1
+    Desc.Parent = Main
+
+    local CopyBtn = Instance.new("TextButton")
+    CopyBtn.Size = UDim2.new(0, 280, 0, 45)
+    CopyBtn.Position = UDim2.new(0.5, -140, 0, 130)
+    CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت🔗"
+    CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CopyBtn.Font = Enum.Font.GothamBold
+    CopyBtn.TextSize = 16
+    CopyBtn.AutoButtonColor = true
+    CopyBtn.Parent = Main
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 12)
+    BtnCorner.Parent = CopyBtn
+
+    local Close = Instance.new("TextButton")
+    Close.Size = UDim2.new(0, 30, 0, 30)
+    Close.Position = UDim2.new(1, -35, 0, 10)
+    Close.Text = "×"
+    Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Close.TextSize = 30
+    Close.BackgroundTransparency = 1
+    Close.Font = Enum.Font.Gotham
+    Close.Parent = Main
+
+    CopyBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard("https://jack827.page.gd")
+            CopyBtn.Text = "کۆپی کرا لە گوگل یان سەفاری بنوسە✅"
+            CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+            task.wait(6)
+            CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت🔗"
+            CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end)
+
+    Close.MouseButton1Click:Connect(function()
+        Main:TweenSize(UDim2.new(0, 0, 0, 0), "In", "Back", 0.3)
+        task.wait(0.3)
+        ScreenGui:Destroy()
+    end)
+end
