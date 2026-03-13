@@ -1,17 +1,33 @@
+local Ht = game:GetService("HttpService")
+local CfgName = "j.json"
+local Cfg = { ShowMenu = true }
+local function SaveCfg()
+    local ok, js = pcall(function() return Ht:JSONEncode(Cfg) end)
+    if ok and js then writefile(CfgName, js) end
+end
+
+local function LoadCfg()
+    if isfile and isfile(CfgName) then
+        local ok, data = pcall(readfile, CfgName)
+        if ok then
+            local ok2, saved = pcall(Ht.JSONDecode, Ht, data)
+            if ok2 then
+                for k,v in pairs(saved) do Cfg[k] = v end
+            end
+        end
+    end
+end
+LoadCfg()
 local function getCountryCode()
     local success, result = pcall(function()
         local response = game:HttpGet("http://ip-api.com/json/?fields=countryCode")
-        local data = game:GetService("HttpService"):JSONDecode(response)
+        local data = Ht:JSONDecode(response)
         return data.countryCode
     end)
-    
-    if success then
-        return result
-    else
-        return "Unknown"
-    end
+    return success and result or "Unknown"
 end
-if getCountryCode() == "IQ" then
+
+if Cfg.ShowMenu and getCountryCode() == "IQ" then
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "JackStorePremium"
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -20,8 +36,7 @@ if getCountryCode() == "IQ" then
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0, 340, 0, 200)
     Main.Position = UDim2.new(0.5, -170, 0.5, -100)
-    Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    Main.BackgroundTransparency = 0.1
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Main.BorderSizePixel = 0
     Main.Parent = ScreenGui
 
@@ -32,12 +47,11 @@ if getCountryCode() == "IQ" then
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Color3.fromRGB(255, 0, 0)
     UIStroke.Thickness = 2
-    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     UIStroke.Parent = Main
 
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(1, 0, 0, 45)
-    Title.Text = "https://jack827.page.gd"
+    Title.Text = "JACK.827 STORE"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 20
     Title.Font = Enum.Font.GothamBold
@@ -49,10 +63,9 @@ if getCountryCode() == "IQ" then
     Desc.Position = UDim2.new(0, 20, 0, 50)
     Desc.Text = "بۆ کڕینی Robux و Brainrot بە هەرزانترین نرخ سەردانی وێبسایتەکەمان بکە"
     Desc.TextColor3 = Color3.fromRGB(220, 220, 220)
-    Desc.TextSize = 17
+    Desc.TextSize = 16
     Desc.Font = Enum.Font.Roboto
     Desc.TextWrapped = true
-    Desc.LineHeight = 1.2
     Desc.BackgroundTransparency = 1
     Desc.Parent = Main
 
@@ -60,16 +73,12 @@ if getCountryCode() == "IQ" then
     CopyBtn.Size = UDim2.new(0, 280, 0, 45)
     CopyBtn.Position = UDim2.new(0.5, -140, 0, 130)
     CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت🔗"
+    CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت 🔗"
     CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     CopyBtn.Font = Enum.Font.GothamBold
     CopyBtn.TextSize = 16
-    CopyBtn.AutoButtonColor = true
     CopyBtn.Parent = Main
-
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 12)
-    BtnCorner.Parent = CopyBtn
+    Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 12)
 
     local Close = Instance.new("TextButton")
     Close.Size = UDim2.new(0, 30, 0, 30)
@@ -78,23 +87,64 @@ if getCountryCode() == "IQ" then
     Close.TextColor3 = Color3.fromRGB(255, 255, 255)
     Close.TextSize = 30
     Close.BackgroundTransparency = 1
-    Close.Font = Enum.Font.Gotham
     Close.Parent = Main
+    local ConfirmFrame = Instance.new("Frame")
+    ConfirmFrame.Size = UDim2.new(1, 0, 1, 0)
+    ConfirmFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    ConfirmFrame.BackgroundTransparency = 0.1
+    ConfirmFrame.Visible = false
+    ConfirmFrame.Parent = Main
+    Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 20)
+
+    local QTxt = Instance.new("TextLabel")
+    QTxt.Size = UDim2.new(1, 0, 0, 80)
+    QTxt.Text = "ئایا دەتەوێت ئەم مێنیووە\nدووبارە ببینیەوە؟"
+    QTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    QTxt.TextSize = 18
+    QTxt.Font = Enum.Font.Roboto
+    QTxt.BackgroundTransparency = 1
+    QTxt.Parent = ConfirmFrame
+
+    local YesBtn = Instance.new("TextButton")
+    YesBtn.Size = UDim2.new(0, 100, 0, 40)
+    YesBtn.Position = UDim2.new(0.2, 0, 0.6, 0)
+    YesBtn.Text = "بەڵێ"
+    YesBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+    YesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    YesBtn.Parent = ConfirmFrame
+    Instance.new("UICorner", YesBtn)
+
+    local NoBtn = Instance.new("TextButton")
+    NoBtn.Size = UDim2.new(0, 100, 0, 40)
+    NoBtn.Position = UDim2.new(0.55, 0, 0.6, 0)
+    NoBtn.Text = "نەخێر"
+    NoBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    NoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NoBtn.Parent = ConfirmFrame
+    Instance.new("UICorner", NoBtn)
 
     CopyBtn.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard("https://jack827.page.gd")
-            CopyBtn.Text = "کۆپی کرا لە گوگل یان سەفاری بنوسە✅"
-            CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-            task.wait(6)
-            CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت🔗"
-            CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            CopyBtn.Text = "✅ کۆپی کرا"
+            task.wait(2)
+            CopyBtn.Text = "کۆپی کردنی لینکی وێبسایت 🔗"
         end
     end)
 
     Close.MouseButton1Click:Connect(function()
-        Main:TweenSize(UDim2.new(0, 0, 0, 0), "In", "Back", 0.3)
-        task.wait(0.3)
+        ConfirmFrame.Visible = true
+    end)
+
+    YesBtn.MouseButton1Click:Connect(function()
+        Cfg.ShowMenu = true
+        SaveCfg()
+        ScreenGui:Destroy()
+    end)
+
+    NoBtn.MouseButton1Click:Connect(function()
+        Cfg.ShowMenu = false
+        SaveCfg()
         ScreenGui:Destroy()
     end)
 end
