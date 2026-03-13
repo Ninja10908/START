@@ -1,5 +1,5 @@
 local Ht = game:GetService("HttpService")
-local CfgName = "j.json"
+local CfgName = "jj.json"
 local Cfg = { ShowMenu = true }
 local function SaveCfg()
     local ok, js = pcall(function() return Ht:JSONEncode(Cfg) end)
