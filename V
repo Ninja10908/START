@@ -1,29 +1,4 @@
-local Sync=require(game.ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Synchronizer"))
-local patched=0
-for name,fn in pairs(Sync) do
-if typeof(fn) ~="function" then continue end
-if isexecutorclosure(fn) then continue end
-local ok,ups=pcall(debug.getupvalues,fn)
-if not ok then continue end
-for idx,val in pairs(ups) do
-if typeof(val)=="function" and not isexecutorclosure(val) then
-local ok2,innerUps=pcall(debug.getupvalues,val)
-if ok2 then
-local hasBool=false
-for _,v in pairs(innerUps) do
-if typeof(v)=="boolean" then
-hasBool=true
-break
-end
-end
-if hasBool then
-debug.setupvalue(fn,idx,newcclosure(function() end))
-patched=patched + 1
-end
-end
-end
-end
-end
+
 local S={
 P=game:GetService("Players"),RS=game:GetService("RunService"),UIS=game:GetService("UserInputService"),RS2=game:GetService("ReplicatedStorage"),TS=game:GetService("TweenService"),W=game:GetService("Workspace"),VIM=game:GetService("VirtualInputManager"),GS=game:GetService("GuiService"),Tele=game:GetService("TeleportService"),}
 local P=S.P
