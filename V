@@ -1,3 +1,11 @@
+pcall(function()
+    local dbg; dbg = hookfunction(getrenv().debug.getinfo, function(...)
+        if dbg(2, "s"):find("Packages.Synchronizer") then 
+            return coroutine.yield() 
+        end
+        return dbg(...)
+    end)
+end)
 do
 
     local Sync = require(game.ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Synchronizer"))
