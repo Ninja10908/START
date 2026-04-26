@@ -1,1 +1,460 @@
-local S={P=game:GetService("Players"),RS=game:GetService("RunService"),UIS=game:GetService("UserInputService"),RS2=game:GetService("ReplicatedStorage"),TS=game:GetService("TweenService"),W=game:GetService("Workspace"),VIM=game:GetService("VirtualInputManager"),GS=game:GetService("GuiService"),Tele=game:GetService("TeleportService")}local P=S.P local RS=S.RS local UIS=S.UIS local RS2=S.RS2 local W=S.W local LP=P.LocalPlayer local PG=LP:WaitForChild("PlayerGui")local function unat()local c=LP.Character if not c then return end local h=c:FindFirstChild("Humanoid")if not h then return end h:UnequipTools()for _,t in ipairs(c:GetChildren())do if t:IsA("Tool")then t.Parent=LP.Backpack end end task.wait(0.05)end local Shared={Sel=nil,Cache={}}local C={AutoTPPriority=true}local function getTool()local tools={"Flying Carpet","Cupid's Wings","Santa's Sleigh","Witch's Broom"}local c=LP.Character local bp=LP.Backpack for _,n in ipairs(tools)do if(c and c:FindFirstChild(n))or bp:FindFirstChild(n)then return n end end return"Flying Carpet"end local LOW={[1]=Vector3.new(-460,-6,219),[5]=Vector3.new(-355,-6,217),[2]=Vector3.new(-460,-6,111),[6]=Vector3.new(-355,-6,113),[3]=Vector3.new(-460,-6,5),[7]=Vector3.new(-355,-6,5),[4]=Vector3.new(-460,-6,-100),[8]=Vector3.new(-355,-6,-100)}local HIGH={[1]=Vector3.new(-476.47,20.73,220.94),[5]=Vector3.new(-342.53,20.69,221.44),[2]=Vector3.new(-476.56,20.70,113.77),[6]=Vector3.new(-342.86,20.66,113.41),[3]=Vector3.new(-476.86,20.74,6.17),[7]=Vector3.new(-342.42,20.68,6.24),[4]=Vector3.new(-476.63,20.74,-101.07),[8]=Vector3.new(-342.79,20.74,-99.73)}local CLONE={Vector3.new(-476,-4,221),Vector3.new(-476,-4,114),Vector3.new(-476,-4,7),Vector3.new(-476,-4,-100),Vector3.new(-342,-4,-100),Vector3.new(-342,-4,6),Vector3.new(-342,-4,114),Vector3.new(-342,-4,220)}local FACE={Vector3.new(-519,-3,221),Vector3.new(-519,-3,114),Vector3.new(-518,-3,7),Vector3.new(-519,-3,-100),Vector3.new(-301,-3,-100),Vector3.new(-301,-3,7),Vector3.new(-302,-3,114),Vector3.new(-300,-3,220)}local isMoving=false local function getBaseIdx(pos)local c,d=1,math.huge for i,p in pairs(LOW)do local dist=(Vector2.new(pos.X,pos.Z)-Vector2.new(p.X,p.Z)).Magnitude if dist<d then d=dist c=i end end return c end local function walk(sec)local c=LP.Character local h=c:FindFirstChild("Humanoid")local hrp=c:FindFirstChild("HumanoidRootPart")local lv=hrp.CFrame.LookVector local start=os.clock()local conn conn=RS.RenderStepped:Connect(function()if os.clock()-start>=sec then conn:Disconnect()h:Move(Vector3.zero,false)return end h:Move(lv,false)end)end local function clone()if _G.isCloning then return end _G.isCloning=true unat()local tool="Quantum Cloner"local c=LP.Character if not c then _G.isCloning=false return end local t=LP.Backpack:FindFirstChild(tool)or c:FindFirstChild(tool)local h=c:FindFirstChild("Humanoid")if t and h then h:EquipTool(t)task.wait(0.01)local vs=workspace.CurrentCamera.ViewportSize local vim=S.VIM local x=vs.X*0.1 local y=vs.Y*0.9 vim:SendMouseButtonEvent(x,y,0,true,game,1)vim:SendMouseButtonEvent(x,y,0,false,game,1)local clone=("%*_Clone"):format(LP.UserId)local appeared=false local timeout=5 local start=tick()while tick()-start<timeout do if workspace:FindFirstChild(clone)then appeared=true break end task.wait(0.1)end if appeared then task.wait(0.1)local pg=LP:FindFirstChild("PlayerGui")local tf=pg and pg:FindFirstChild("ToolsFrames")local qc=tf and tf:FindFirstChild("QuantumCloner")local tp=qc and qc:FindFirstChild("TeleportToClone")if tp and tp.Visible then local old=S.GS.SelectedObject S.GS.SelectedObject=tp task.wait(0.01)vim:SendKeyEvent(true,Enum.KeyCode.Return,false,game)task.wait(0.01)vim:SendKeyEvent(false,Enum.KeyCode.Return,false,game)task.wait(0.1)S.GS.SelectedObject=old end end end _G.isCloning=false end _G._isPlotUnlocked=function(plot)local ok,res=pcall(function()local plots=W:FindFirstChild("Plots")if not plots then return false end local p=plots:FindFirstChild(plot)if not p then return false end local u=p:FindFirstChild("Unlock")if not u then return true end local items={}for _,it in pairs(u:GetChildren())do local pos=nil if it:IsA("Model")then pcall(function()pos=it:GetPivot().Position end)elseif it:IsA("BasePart")then pos=it.Position end if pos then table.insert(items,{Obj=it,H=pos.Y})end end table.sort(items,function(a,b)return a.H<b.H end)if #items==0 then return true end local door=items[1].Obj for _,d in ipairs(door:GetDescendants())do if d:IsA("ProximityPrompt")and d.Enabled then return false end end for _,c in ipairs(door:GetChildren())do if c:IsA("ProximityPrompt")and c.Enabled then return false end end return true end)return ok and res or false end local function getPlotSign()local un=LP.Name local dn=LP.DisplayName local function m(t)if not t then return false end t=string.lower(t)un=string.lower(un)dn=string.lower(dn)return string.find(t,un,1,true)or string.find(t,dn,1,true)end for _,o in ipairs(W:GetDescendants())do if o:IsA("BasePart")and o.Name=="PlotSign"then for _,g in ipairs(o:GetDescendants())do if g:IsA("TextLabel")and m(g.Text)then return o end end end end return nil end local myPlotSign=getPlotSign()local P_SIZE=Vector3.new(96,105,96)local XH=P_SIZE.X/2 local ZH=P_SIZE.Z/2 local function isNearMyBase(pos)if not myPlotSign or not pos then return false end local bp=myPlotSign.Position local d=pos-bp return math.abs(d.X)<=XH and math.abs(d.Z)<=ZH end local function tp()if isMoving then return end local target=Shared.Sel if not target or not target.position then return end if isNearMyBase(target.position)then return end local c=LP.Character local hrp=c and c:FindFirstChild("HumanoidRootPart")local h=c and c:FindFirstChild("Humanoid")if not hrp or not h or h.Health<=0 then return end isMoving=true local pos=target.position local tool=getTool()local t=LP.Backpack:FindFirstChild(tool)or c:FindFirstChild(tool)if t then h:EquipTool(t)end task.wait(0.01)local isHigh=pos.Y>10 local idx=getBaseIdx(pos)local base=isHigh and HIGH[idx]or LOW[idx]local minH=50 local targetH=math.max(base.Y,minH)local jump=tick()while hrp.Position.Y<targetH and(tick()-jump)<3 do hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,200,hrp.AssemblyLinearVelocity.Z)RS.Heartbeat:Wait()end for i=1,10 do hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)if(hrp.Position-base).Magnitude>3 then hrp.CFrame=CFrame.new(base)task.wait(0.05)end end if not isHigh then local best=CLONE[1]local min=math.huge for _,v in ipairs(CLONE)do local d=(pos-v).Magnitude if d<min then min=d best=v end end for i=1,6 do if(hrp.Position-best).Magnitude>3 then hrp.CFrame=CFrame.new(best)task.wait(0.05)end end end local bestFace=FACE[1]local minFace=math.huge for _,v in ipairs(FACE)do local d=(hrp.Position-v).Magnitude if d<minFace then minFace=d bestFace=v end end task.wait(0.1)hrp.CFrame=CFrame.lookAt(hrp.Position,Vector3.new(bestFace.X,hrp.Position.Y,bestFace.Z))local plotName=""local plotObj=target.part while plotObj and plotObj.Parent do if plotObj.Parent.Name=="Plots"then plotName=plotObj.Name break end plotObj=plotObj.Parent end if isHigh or not _G._isPlotUnlocked(plotName)then walk(0.4)task.wait(0.4)clone()task.wait(0.3)end task.wait(0.15)if t then h:EquipTool(t)end local vert=pos.Y-hrp.Position.Y if vert>2 then local air=Vector3.new(pos.X,pos.Y-8,pos.Z)local plat=Instance.new("Part")plat.Name="jacck"plat.Size=Vector3.new(4,1,4)plat.Position=air-Vector3.new(0,5,0)plat.Material=Enum.Material.Neon plat.Anchored=true plat.CanCollide=true plat.Transparency=1 plat.Parent=W RS.Heartbeat:Wait()for i=1,10 do if not LP:GetAttribute("Stealing")then hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)hrp.CFrame=CFrame.new(air)task.wait(0.05)end end task.spawn(function()local start=tick()while tick()-start<20 do if LP:GetAttribute("Stealing")then break end task.wait(0.1)end plat:Destroy()end)else for i=1,10 do if LP:GetAttribute("Stealing")then break end hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)if(hrp.Position-pos).Magnitude>3 then hrp.CFrame=CFrame.new(pos)task.wait(0.05)end task.wait(0.05)end end isMoving=false end local scannerRunning=true local skipPos=Vector3.new(-0.14,5.69,1.14)local function parseValue(t)t=tostring(t or""):gsub("%s","")local n,s=t:match("([%d%.]+)([KkMmBbTt]?)")if not n then return 0 end n=tonumber(n)or 0 local m={K=1e3,M=1e6,B=1e9,T=1e12}return n*(m[(s or""):upper()]or 1)end local function scanLoop()while scannerRunning do local debris=W:FindFirstChild("Debris")if debris then local best={val=-1,part=nil,txt="",name=""}for _,t in ipairs(debris:GetChildren())do if t.Name=="FastOverheadTemplate"then local sg=t:FindFirstChildOfClass("SurfaceGui")if sg and sg.Adornee and sg.Adornee.Parent then local part=sg.Adornee if(part.Position-skipPos).Magnitude<30 or isNearMyBase(part.Position)then continue end local gen=sg:FindFirstChild("Generation",true)if gen and gen:IsA("TextLabel")then local txt=gen.Text or""if txt~=""and txt:find("/s")then local val=parseValue(txt)if val>best.val then local dn=sg:FindFirstChild("DisplayName",true)best={part=part,val=val,txt=txt,name=dn and dn.Text or"Pet"}end end end end end end if best.part then Shared.Sel={position=best.part.Position,part=best.part,name=best.name,genValue=best.val,genText=best.txt}Shared.Cache={{name=best.name,genValue=best.val,genText=best.txt,position=best.part.Position}}end end task.wait(0.3)end end task.spawn(scanLoop)local gui=Instance.new("ScreenGui")gui.Name="TPButton"gui.ResetOnSpawn=false gui.Parent=PG local btn=Instance.new("TextButton")btn.Name="TpBestButton"btn.Text="Tp Best"btn.Size=UDim2.new(0,60,0,30)btn.Position=UDim2.new(1,-30,0.5,-95)btn.AnchorPoint=Vector2.new(1,0.5)btn.BackgroundColor3=Color3.new(0,0,0)btn.TextColor3=Color3.new(1,1,1)btn.Font=Enum.Font.GothamBold btn.TextSize=14 btn.Parent=gui Instance.new("UICorner",btn).CornerRadius=UDim.new(0,6)btn.MouseButton1Click:Connect(function()tp()end)
+local Services={
+Players=game:GetService("Players"),RunService=game:GetService("RunService"),UserInputService=game:GetService("UserInputService"),ReplicatedStorage=game:GetService("ReplicatedStorage"),TweenService=game:GetService("TweenService"),Workspace=game:GetService("Workspace"),VirtualInputManager=game:GetService("VirtualInputManager"),GuiService=game:GetService("GuiService"),TeleportService=game:GetService("TeleportService"),}
+local Players=Services.Players
+local RunService=Services.RunService
+local UserInputService=Services.UserInputService
+local ReplicatedStorage=Services.ReplicatedStorage
+local TweenService=Services.TweenService
+local Workspace=Services.Workspace
+local LocalPlayer=Players.LocalPlayer
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+local Decrypted
+Decrypted=setmetatable({},{
+__index=function(S,ez)
+local Netty=ReplicatedStorage.Packages.Net
+local prefix,path
+if     ez:sub(1,3)=="RE/" then prefix="RE/";  path=ez:sub(4)
+elseif ez:sub(1,3)=="RF/" then prefix="RF/";  path=ez:sub(4)
+else return nil end
+local Remote
+for i,v in Netty:GetChildren() do
+if v.Name==ez then
+Remote=Netty:GetChildren()[i + 1]
+break
+end
+end
+if Remote and not rawget(Decrypted,ez) then rawset(Decrypted,ez,Remote) end
+return rawget(Decrypted,ez)
+end
+})
+local Utility={}
+function Utility:LarpNet(F) return Decrypted[F] end
+local SharedState={
+SelectedPetData=nil,AllAnimalsCache=nil,ListNeedsRedraw=true,}
+local Config={
+AutoTPPriority=true
+}
+local function getAvailableTool()
+local tools={"Flying Carpet","Cupid's Wings","Santa's Sleigh","Witch's Broom"}
+local char=LocalPlayer.Character
+local backpack=LocalPlayer.Backpack
+for _,toolName in ipairs(tools) do
+if (char and char:FindFirstChild(toolName)) or backpack:FindFirstChild(toolName) then
+return toolName
+end
+end
+return "Flying Carpet"
+end
+local PRIORITY_LIST={
+"Strawberry Elephant","Meowl","Skibidi Toilet","Headless Horseman","Dragon Gingerini","Dragon Cannelloni","Ketupat Bros","Hydra Dragon Cannelloni","La Supreme Combinasion","Love Love Bear","Ginger Gerat","Cerberus","Capitano Moby","La Casa Boo","Burguro and Fryuro","Spooky and Pumpky","Cooki and Milki","Rosey and Teddy","Popcuru and Fizzuru","Reinito Sleighito","Fragrama and Chocrama","Garama and Madundung","Ketchuru and Musturu","La Secret Combinasion","Tralaledon","Tictac Sahur","Ketupat Kepat","Tang Tang Keletang","Orcaledon","La Ginger Sekolah","Los Spaghettis","Lavadorito Spinito","Swaggy Bros","La Taco Combinasion","Los Primos","Chillin Chili","Tuff Toucan","W or L","Chillin Chili","Chipso and Queso"
+}
+local function findAdorneeGlobal(animalData)
+if not animalData then return nil end
+local plot=Workspace:FindFirstChild("Plots") and Workspace.Plots:FindFirstChild(animalData.plot)
+if plot then
+local podiums=plot:FindFirstChild("AnimalPodiums")
+if podiums then
+local podium=podiums:FindFirstChild(animalData.slot)
+if podium then
+local base=podium:FindFirstChild("Base")
+if base then
+local spawn=base:FindFirstChild("Spawn")
+if spawn then return spawn end
+return base:FindFirstChildWhichIsA("BasePart") or base
+end
+end
+end
+end
+return nil
+end
+local BASES_LOW={
+[1]=Vector3.new(-460,-6,219),[5]=Vector3.new(-355,-6,217),[2]=Vector3.new(-460,-6,111),[6]=Vector3.new(-355,-6,113),[3]=Vector3.new(-460,-6,5),[7]=Vector3.new(-355,-6,5),[4]=Vector3.new(-460,-6,-100),[8]=Vector3.new(-355,-6,-100) 
+}
+local BASES_HIGH={
+[1]=Vector3.new(-476.474853515625,20.732906341552734,220.94090270996094),[5]=Vector3.new(-342.5367126464844,20.69801902770996,221.44737243652344),[2]=Vector3.new(-476.5684814453125,20.70664405822754,113.77315521240234),[6]=Vector3.new(-342.8604736328125,20.669641494750977,113.41409301757812),[3]=Vector3.new(-476.8675842285156,20.74148178100586,6.178487777709961),[7]=Vector3.new(-342.42108154296875,20.687667846679688,6.249461650848389),[4]=Vector3.new(-476.6324768066406,20.744949340820312,-101.07275390625),[8]=Vector3.new(-342.7937927246094,20.748071670532227,-99.73458862304688)
+}
+local CLONE_POSITIONS_FLOOR={
+Vector3.new(-476,-4,221),Vector3.new(-476,-4,114),Vector3.new(-476,-4,7),Vector3.new(-476,-4,-100),Vector3.new(-342,-4,-100),Vector3.new(-342,-4,6),Vector3.new(-342,-4,114),Vector3.new(-342,-4,220)
+}
+local FACE_TARGETS={
+Vector3.new(-519,-3,221),Vector3.new(-519,-3,114),Vector3.new(-518,-3,7),Vector3.new(-519,-3,-100),Vector3.new(-301,-3,-100),Vector3.new(-301,-3,7),Vector3.new(-302,-3,114),Vector3.new(-300,-3,220)
+}
+local isTpMoving=false
+local function getClosestBaseIdx(pos)
+local closest,dist=1,math.huge
+for i,basePos in pairs(BASES_LOW) do
+local d=(Vector2.new(pos.X,pos.Z) - Vector2.new(basePos.X,basePos.Z)).Magnitude
+if d < dist then dist=d; closest=i end
+end
+return closest
+end
+local function walkForward(seconds)
+local char=LocalPlayer.Character
+local hum=char:FindFirstChild("Humanoid")
+local hrp=char:FindFirstChild("HumanoidRootPart")
+local lookVector=hrp.CFrame.LookVector
+local startTime=os.clock()
+local conn
+conn=RunService.RenderStepped:Connect(function()
+if os.clock() - startTime >=seconds then
+conn:Disconnect()
+hum:Move(Vector3.zero,false)
+return
+end
+hum:Move(lookVector,false)
+end)
+end
+local function instantClone()
+if _G.isCloning then return end
+_G.isCloning=true
+local toolName="Quantum Cloner"
+local char=LocalPlayer.Character
+if not char then _G.isCloning=false return end
+local tool=LocalPlayer.Backpack:FindFirstChild(toolName) or char:FindFirstChild(toolName)
+local hum=char:FindFirstChild("Humanoid")
+if tool and hum then
+hum:EquipTool(tool)
+task.wait(0.01)
+local vpSize=workspace.CurrentCamera.ViewportSize
+local vim=Services.VirtualInputManager
+local clickX=vpSize.X * 0.1
+local clickY=vpSize.Y * 0.9
+vim:SendMouseButtonEvent(clickX,clickY,0,true,game,1)
+vim:SendMouseButtonEvent(clickX,clickY,0,false,game,1)
+local cloneName=("%*_Clone"):format(LocalPlayer.UserId)
+local cloneAppeared=false
+local timeout=5
+local startTime=tick()
+while tick() - startTime < timeout do
+if workspace:FindFirstChild(cloneName) then
+cloneAppeared=true
+break
+end
+task.wait(0.1)
+end
+if cloneAppeared then
+task.wait(0.1)
+local pGui=LocalPlayer:FindFirstChild("PlayerGui")
+local tf=pGui and pGui:FindFirstChild("ToolsFrames")
+local qc=tf and tf:FindFirstChild("QuantumCloner")
+local tpButton=qc and qc:FindFirstChild("TeleportToClone")
+if tpButton and tpButton.Visible then
+local oldSelected=Services.GuiService.SelectedObject
+Services.GuiService.SelectedObject=tpButton
+task.wait(0.01)
+vim:SendKeyEvent(true,Enum.KeyCode.Return,false,game)
+task.wait(0.01)
+vim:SendKeyEvent(false,Enum.KeyCode.Return,false,game)
+task.wait(0.1)
+Services.GuiService.SelectedObject=oldSelected
+end
+end
+end
+_G.isCloning=false
+end
+_G._isTargetPlotUnlocked=function(plotName)
+local ok,res=pcall(function()
+local plots=Workspace:FindFirstChild("Plots")
+if not plots then return false end
+local targetPlot=plots:FindFirstChild(plotName)
+if not targetPlot then return false end
+local unlockFolder=targetPlot:FindFirstChild("Unlock")
+if not unlockFolder then return true end
+local unlockItems={}
+for _,item in pairs(unlockFolder:GetChildren()) do
+local pos=nil
+if item:IsA("Model") then pcall(function() pos=item:GetPivot().Position end)
+elseif item:IsA("BasePart") then pos=item.Position end
+if pos then table.insert(unlockItems,{Object=item,Height=pos.Y}) end
+end
+table.sort(unlockItems,function(a,b) return a.Height < b.Height end)
+if #unlockItems==0 then return true end
+local floor1Door=unlockItems[1].Object
+for _,desc in ipairs(floor1Door:GetDescendants()) do
+if desc:IsA("ProximityPrompt") and desc.Enabled then return false end
+end
+for _,child in ipairs(floor1Door:GetChildren()) do
+if child:IsA("ProximityPrompt") and child.Enabled then return false end
+end
+return true
+end)
+return ok and res or false
+end
+local function jack827()
+if isTpMoving then return end
+local targetPetData=nil
+if Config.AutoTPPriority then
+local bestEntry=nil
+local cache=SharedState.AllAnimalsCache
+if cache and type(cache)=="table" then
+for _,pName in ipairs(PRIORITY_LIST) do
+local searchName=pName:lower()
+for _,a in ipairs(cache) do
+if a and a.name and a.name:lower()==searchName and a.owner ~=LocalPlayer.Name then
+bestEntry=a
+break
+end
+end
+if bestEntry then break end
+end
+if not bestEntry then
+for _,a in ipairs(cache) do
+if a and a.owner ~=LocalPlayer.Name then
+bestEntry=a
+break
+end
+end
+end
+end
+if bestEntry then
+targetPetData=bestEntry
+else
+if not SharedState.SelectedPetData then return end
+targetPetData=SharedState.SelectedPetData.animalData
+end
+else
+if not SharedState.SelectedPetData then return end
+targetPetData=SharedState.SelectedPetData.animalData
+end
+if not targetPetData then return end
+local char=LocalPlayer.Character
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+local hum=char and char:FindFirstChild("Humanoid")
+if not hrp or not hum or hum.Health <=0 then return end
+isTpMoving=true
+local targetPart=findAdorneeGlobal(targetPetData)
+if not targetPart then 
+isTpMoving=false
+return 
+end
+local exactPos=targetPart.Position
+local carpetName=getAvailableTool()
+local carpet=LocalPlayer.Backpack:FindFirstChild(carpetName) or char:FindFirstChild(carpetName)
+if carpet then hum:EquipTool(carpet) end
+task.wait(0.01)
+local isSecondFloor=exactPos.Y > 10
+local plotIndex=getClosestBaseIdx(exactPos)
+local targetBasePos=isSecondFloor and BASES_HIGH[plotIndex] or BASES_LOW[plotIndex]
+local minHeight=50
+local targetHeight=math.max(targetBasePos.Y,minHeight)
+local jumpStart=tick()
+while hrp.Position.Y < targetHeight and (tick() - jumpStart) < 3 do
+hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,200,hrp.AssemblyLinearVelocity.Z)
+RunService.Heartbeat:Wait()
+end
+for i=1,10 do
+hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)
+if (hrp.Position - targetBasePos).Magnitude > 3 then
+hrp.CFrame=CFrame.new(targetBasePos)
+task.wait(0.05)
+end
+end
+if not isSecondFloor then
+local bestSpot=CLONE_POSITIONS_FLOOR[1]
+local minDst=math.huge
+for _,v in ipairs(CLONE_POSITIONS_FLOOR) do
+local d=(targetPart.Position - v).Magnitude
+if d < minDst then minDst=d; bestSpot=v end
+end
+for i=1,6 do
+if (hrp.Position - bestSpot).Magnitude > 3 then
+hrp.CFrame=CFrame.new(bestSpot)
+task.wait(0.05)
+end
+end
+end
+local bestFace=FACE_TARGETS[1]
+local minFaceDist=math.huge
+for _,v in ipairs(FACE_TARGETS) do
+local d=(hrp.Position - v).Magnitude
+if d < minFaceDist then
+minFaceDist=d
+bestFace=v
+end
+end
+task.wait(0.1)
+hrp.CFrame=CFrame.lookAt(hrp.Position,Vector3.new(bestFace.X,hrp.Position.Y,bestFace.Z))
+if isSecondFloor or not _G._isTargetPlotUnlocked(targetPetData.plot) then
+walkForward(0.4)
+task.wait(0.4)
+instantClone()
+task.wait(0.3)
+end
+task.wait(0.15)
+if carpet then hum:EquipTool(carpet) end
+local verticalDiff=targetPart.Position.Y - hrp.Position.Y
+if verticalDiff > 2 then
+local airPos=Vector3.new(targetPart.Position.X,targetPart.Position.Y - 8,targetPart.Position.Z)
+local plat=Instance.new("Part")
+plat.Name="jacck"
+plat.Size=Vector3.new(4,1,4)
+plat.Position=airPos - Vector3.new(0,5,0)
+plat.Material=Enum.Material.Neon
+plat.Anchored=true
+plat.CanCollide=true
+plat.Transparency=1
+plat.Parent=Workspace
+RunService.Heartbeat:Wait()
+for i=1,10 do
+if not LocalPlayer:GetAttribute("Stealing") then
+hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)
+hrp.CFrame=CFrame.new(airPos)
+task.wait(0.05)
+end
+end
+task.spawn(function()
+local start=tick()
+while tick() - start < 20 do
+if LocalPlayer:GetAttribute("Stealing") then break end
+task.wait(0.1)
+end
+plat:Destroy()
+end)
+else
+for i=1,10 do
+if LocalPlayer:GetAttribute("Stealing") then break end
+hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)
+if (hrp.Position - targetPart.Position).Magnitude > 3 then
+hrp.CFrame=CFrame.new(targetPart.Position)
+task.wait(0.05)
+end
+task.wait(0.05)
+end
+end
+isTpMoving=false
+end
+local screenGui=Instance.new("ScreenGui")
+screenGui.Name="TPButton"
+screenGui.ResetOnSpawn=false
+screenGui.Parent=PlayerGui
+local button=Instance.new("TextButton")
+button.Name="TpBestButton"
+button.Text="Tp Best"
+button.Size=UDim2.new(0,60,0,30)
+button.Position=UDim2.new(1,-30,0.5,-95)
+button.AnchorPoint=Vector2.new(1,0.5)
+button.BackgroundColor3=Color3.new(0,0,0)
+button.TextColor3=Color3.new(1,1,1)
+button.Font=Enum.Font.GothamBold
+button.TextSize=14
+button.Parent=screenGui
+Instance.new("UICorner",button).CornerRadius=UDim.new(0,6)
+local dragging=false
+local dragInput,dragStart,startPos
+button.InputBegan:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+dragging=true
+dragStart=input.Position
+startPos=button.Position
+end
+end)
+button.InputChanged:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+dragInput=input
+end
+end)
+UserInputService.InputChanged:Connect(function(input)
+if input==dragInput and dragging then
+local delta=input.Position - dragStart
+button.Position=UDim2.new(
+startPos.X.Scale,startPos.X.Offset + delta.X,startPos.Y.Scale,startPos.Y.Offset + delta.Y
+)
+end
+end)
+UserInputService.InputEnded:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+dragging=false
+end
+end)
+button.MouseButton1Click:Connect(function()
+jack827()
+end)
+task.spawn(function()
+local Packages=ReplicatedStorage:WaitForChild("Packages")
+local Datas=ReplicatedStorage:WaitForChild("Datas")
+local Shared=ReplicatedStorage:WaitForChild("Shared")
+local Utils=ReplicatedStorage:WaitForChild("Utils")
+local Synchronizer=require(Packages:WaitForChild("Synchronizer"))
+local AnimalsData=require(Datas:WaitForChild("Animals"))
+local AnimalsShared=require(Shared:WaitForChild("Animals"))
+local NumberUtils=require(Utils:WaitForChild("NumberUtils"))
+local allAnimalsCache={}
+SharedState.AllAnimalsCache=allAnimalsCache
+local lastAnimalData={}
+local function getAnimalHash(al)
+if not al then return "" end
+local h=""
+for slot,d in pairs(al) do 
+if type(d)=="table" then 
+h=h..tostring(slot)..tostring(d.Index)..tostring(d.Mutation) 
+end 
+end
+return h
+end
+local function scanSinglePlot(plot)
+local changed=false
+pcall(function()
+local ch=Synchronizer:Get(plot.Name)
+if not ch then return end
+local al=ch:Get("AnimalList")
+local hash=getAnimalHash(al)
+if lastAnimalData[plot.Name]==hash then return end
+lastAnimalData[plot.Name]=hash
+changed=true
+for i=#allAnimalsCache,1,-1 do 
+if allAnimalsCache[i].plot==plot.Name then 
+table.remove(allAnimalsCache,i) 
+end 
+end
+local owner=ch:Get("Owner")
+if not owner or not Players:FindFirstChild(owner.Name) then return end
+local ownerName=owner.Name or "Unknown"
+if not al then return end
+for slot,ad in pairs(al) do
+if type(ad)=="table" then
+local aName,aInfo=ad.Index,AnimalsData[ad.Index]
+if aInfo then
+local mut=ad.Mutation or "None"
+if mut=="Yin Yang" then mut="YinYang" end
+local gv=AnimalsShared:GetGeneration(aName,ad.Mutation,ad.Traits,nil)
+local gt="$"..NumberUtils:ToString(gv).."/s"
+table.insert(allAnimalsCache,{
+name=aInfo.DisplayName or aName,genText=gt,genValue=gv,mutation=mut,owner=ownerName,plot=plot.Name,slot=tostring(slot),uid=plot.Name.."_"..tostring(slot)
+})
+end
+end
+end
+end)
+if changed then
+table.sort(allAnimalsCache,function(a,b) return a.genValue>b.genValue end)
+if allAnimalsCache and #allAnimalsCache > 0 then
+SharedState.SelectedPetData=allAnimalsCache[1]
+end
+end
+end
+local function setupPlotListener(plot)
+local ch,retries=nil,0
+while not ch and retries<50 do
+local ok,r=pcall(function() return Synchronizer:Get(plot.Name) end)
+if ok and r then ch=r; break else retries=retries+1; task.wait(0.1) end
+end
+if not ch then return end
+scanSinglePlot(plot)
+plot.DescendantAdded:Connect(function() task.wait(0.1); scanSinglePlot(plot) end)
+plot.DescendantRemoving:Connect(function() task.wait(0.1); scanSinglePlot(plot) end)
+task.spawn(function() while plot.Parent do task.wait(5); scanSinglePlot(plot) end end)
+end
+local plots=Workspace:WaitForChild("Plots",8)
+if plots then
+for _,p in ipairs(plots:GetChildren()) do setupPlotListener(p) end
+plots.ChildAdded:Connect(function(p) task.wait(0.5); setupPlotListener(p) end)
+plots.ChildRemoved:Connect(function(p)
+lastAnimalData[p.Name]=nil
+for i=#allAnimalsCache,1,-1 do 
+if allAnimalsCache[i].plot==p.Name then 
+table.remove(allAnimalsCache,i) 
+end 
+end
+end)
+end
+end)
