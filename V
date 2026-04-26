@@ -8,27 +8,6 @@ local TweenService=Services.TweenService
 local Workspace=Services.Workspace
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
-local Decrypted
-Decrypted=setmetatable({},{
-__index=function(S,ez)
-local Netty=ReplicatedStorage.Packages.Net
-local prefix,path
-if     ez:sub(1,3)=="RE/" then prefix="RE/";  path=ez:sub(4)
-elseif ez:sub(1,3)=="RF/" then prefix="RF/";  path=ez:sub(4)
-else return nil end
-local Remote
-for i,v in Netty:GetChildren() do
-if v.Name==ez then
-Remote=Netty:GetChildren()[i + 1]
-break
-end
-end
-if Remote and not rawget(Decrypted,ez) then rawset(Decrypted,ez,Remote) end
-return rawget(Decrypted,ez)
-end
-})
-local Utility={}
-function Utility:LarpNet(F) return Decrypted[F] end
 local SharedState={
 SelectedPetData=nil,AllAnimalsCache=nil,ListNeedsRedraw=true,}
 local Config={
