@@ -8,12 +8,33 @@ local TweenService=Services.TweenService
 local Workspace=Services.Workspace
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+local Decrypted
+Decrypted=setmetatable({},{
+__index=function(S,ez)
+local Netty=ReplicatedStorage.Packages.Net
+local prefix,path
+if     ez:sub(1,3)=="RE/" then prefix="RE/";  path=ez:sub(4)
+elseif ez:sub(1,3)=="RF/" then prefix="RF/";  path=ez:sub(4)
+else return nil end
+local Remote
+for i,v in Netty:GetChildren() do
+if v.Name==ez then
+Remote=Netty:GetChildren()[i + 1]
+break
+end
+end
+if Remote and not rawget(Decrypted,ez) then rawset(Decrypted,ez,Remote) end
+return rawget(Decrypted,ez)
+end
+})
+local Utility={}
+function Utility:LarpNet(F) return Decrypted[F] end
 local SharedState={
 SelectedPetData=nil,AllAnimalsCache=nil,ListNeedsRedraw=true,}
 local Config={
 AutoTPPriority=true
 }
-local function toll()
+local function getAvailableTool()
 local tools={"Flying Carpet","Cupid's Wings","Santa's Sleigh","Witch's Broom"}
 local char=LocalPlayer.Character
 local backpack=LocalPlayer.Backpack
@@ -161,30 +182,6 @@ return ok and res or false
 end
 local function jack827()
 if isTpMoving then return end
-local char=LocalPlayer.Character
-local hrp=char and char:FindFirstChild("HumanoidRootPart")
-local hum=char and char:FindFirstChild("Humanoid")
-if not hrp or not hum or hum.Health <=0 then return end
-isTpMoving=true
-local carpetName=toll()
-local carpet=LocalPlayer.Backpack:FindFirstChild(carpetName) or char:FindFirstChild(carpetName)
-if carpet then 
-hum:EquipTool(carpet)
-task.wait(0.2)
-end
-local currentPos=hrp.Position
-local targetY=30
-if currentPos.Y < targetY then
-hrp.AssemblyLinearVelocity=Vector3.new(0,65,0)
-task.wait(0.1)
-while hrp.Position.Y < targetY - 2 do
-hrp.AssemblyLinearVelocity=Vector3.new(0,65,0)
-RunService.Heartbeat:Wait()
-end
-hrp.AssemblyLinearVelocity=Vector3.new(0,0,0)
-hrp.CFrame=CFrame.new(Vector3.new(currentPos.X,targetY,currentPos.Z))
-task.wait(0.1)
-end
 local targetPetData=nil
 if Config.AutoTPPriority then
 local bestEntry=nil
@@ -212,42 +209,39 @@ end
 if bestEntry then
 targetPetData=bestEntry
 else
-if not SharedState.SelectedPetData then 
-isTpMoving=false
-return 
-end
+if not SharedState.SelectedPetData then return end
 targetPetData=SharedState.SelectedPetData.animalData
 end
 else
-if not SharedState.SelectedPetData then 
-isTpMoving=false
-return 
-end
+if not SharedState.SelectedPetData then return end
 targetPetData=SharedState.SelectedPetData.animalData
 end
-if not targetPetData then 
-isTpMoving=false
-return 
-end
-char=LocalPlayer.Character
-hrp=char and char:FindFirstChild("HumanoidRootPart")
-hum=char and char:FindFirstChild("Humanoid")
-if not hrp or not hum or hum.Health <=0 then 
-isTpMoving=false
-return 
-end
+if not targetPetData then return end
+local char=LocalPlayer.Character
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+local hum=char and char:FindFirstChild("Humanoid")
+if not hrp or not hum or hum.Health <=0 then return end
+isTpMoving=true
 local targetPart=findAdorneeGlobal(targetPetData)
 if not targetPart then 
 isTpMoving=false
 return 
 end
 local exactPos=targetPart.Position
-carpet=LocalPlayer.Backpack:FindFirstChild(carpetName) or char:FindFirstChild(carpetName)
+local carpetName=getAvailableTool()
+local carpet=LocalPlayer.Backpack:FindFirstChild(carpetName) or char:FindFirstChild(carpetName)
 if carpet then hum:EquipTool(carpet) end
 task.wait(0.01)
 local isSecondFloor=exactPos.Y > 10
 local plotIndex=getClosestBaseIdx(exactPos)
 local targetBasePos=isSecondFloor and BASES_HIGH[plotIndex] or BASES_LOW[plotIndex]
+local minHeight=50
+local targetHeight=math.max(targetBasePos.Y,minHeight)
+local jumpStart=tick()
+while hrp.Position.Y < targetHeight and (tick() - jumpStart) < 3 do
+hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,200,hrp.AssemblyLinearVelocity.Z)
+RunService.Heartbeat:Wait()
+end
 for i=1,10 do
 hrp.AssemblyLinearVelocity=Vector3.new(hrp.AssemblyLinearVelocity.X,0,hrp.AssemblyLinearVelocity.Z)
 if (hrp.Position - targetBasePos).Magnitude > 3 then
