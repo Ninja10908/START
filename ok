@@ -1,14 +1,10 @@
 local Players=game:GetService("Players")
 local RunService=game:GetService("RunService")
 local player=Players.LocalPlayer
-local COMMAND_DATA={
-["ragdoll"]=30,["balloon"]=30,["rocket"]=120,["jail"]=60,["inverse"]=60,["nightvision"]=60,["tiny"]=60,["morph"]=60,["jumpscare"]=60
-}
+local COMMAND_DATA={["ragdoll"]=30,["balloon"]=30,["rocket"]=120,["jail"]=60,["inverse"]=60,["nightvision"]=60,["tiny"]=60,["morph"]=60,["jumpscare"]=60}
 local PRIMARY_COMMANDS={"ragdoll","balloon","rocket"}
 local SECONDARY_COMMANDS={"jail","inverse","nightvision","tiny","morph","jumpscare"}
-local commandInUse={
-["ragdoll"]=false,["balloon"]=false,["rocket"]=false
-}
+local commandInUse={["ragdoll"]=false,["balloon"]=false,["rocket"]=false}
 local globalCooldowns={}
 local playerProcessing={}
 local hitPlayers={}
@@ -17,30 +13,32 @@ local secondaryHitCount={}
 local function click(btn)
 if not btn then return end
 pcall(function()
-for _,c in pairs(getconnections(btn.MouseButton1Click)) do c:Fire() end
-for _,c in pairs(getconnections(btn.Activated)) do c:Fire() end
+if firesignal then
+firesignal(btn.MouseButton1Click)
+firesignal(btn.Activated)
+end
 end)
 end
 local function isCommandReady(cmdName)
-local readyAt=globalCooldowns[cmdName] or 0
-return tick() >=readyAt
+local readyAt=globalCooldowns[cmdName]or 0
+return tick()>=readyAt
 end
 local function releaseCommandLock(cmdName)
 commandInUse[cmdName]=false
 end
 local function executeCommandOnTarget(target,cmdName,isSecondary)
-if not target or playerProcessing[target.UserId] then return false end
+if not target or playerProcessing[target.UserId]then return false end
 if isSecondary then
-if not secondaryHitCount[target.UserId] then
+if not secondaryHitCount[target.UserId]then
 secondaryHitCount[target.UserId]={}
 end
-local count=secondaryHitCount[target.UserId][cmdName] or 0
-if count >=2 then return false end
+local count=secondaryHitCount[target.UserId][cmdName]or 0
+if count>=2 then return false end
 else
-if hitPlayers[target.UserId] and hitPlayers[target.UserId][cmdName] then return false end
+if hitPlayers[target.UserId]and hitPlayers[target.UserId][cmdName]then return false end
 end
-if cmdName=="ragdoll" or cmdName=="balloon" or cmdName=="rocket" then
-if commandInUse[cmdName] then return false end
+if cmdName=="ragdoll"or cmdName=="balloon"or cmdName=="rocket"then
+if commandInUse[cmdName]then return false end
 commandInUse[cmdName]=true
 end
 playerProcessing[target.UserId]=true
@@ -48,36 +46,34 @@ local success=false
 local panel=player:WaitForChild("PlayerGui"):FindFirstChild("AdminPanel")
 if panel then
 local pBtn=nil
-for _,d in pairs(panel:GetDescendants()) do
-if (d:IsA("TextButton") or d:IsA("ImageButton")) and 
-(d.Name:find(target.Name) or 
-(d:FindFirstChildOfClass("TextLabel") and d:FindFirstChildOfClass("TextLabel").Text:find(target.Name))) then
+for _,d in pairs(panel:GetDescendants())do
+if(d:IsA("TextButton")or d:IsA("ImageButton"))and(d.Name:find(target.Name)or(d:FindFirstChildOfClass("TextLabel")and d:FindFirstChildOfClass("TextLabel").Text:find(target.Name)))then
 pBtn=d
 break
 end
 end
-if pBtn and isCommandReady(cmdName) then
-for _,d in pairs(panel:GetDescendants()) do
-if d:IsA("TextButton") or d:IsA("ImageButton") then
-local txt=(d:IsA("TextButton") and d.Text or (d:FindFirstChildOfClass("TextLabel") and d:FindFirstChildOfClass("TextLabel").Text or "")):lower()
-if txt:find(cmdName) and (txt:find("^:") or txt:find("^;")) then
+if pBtn and isCommandReady(cmdName)then
+for _,d in pairs(panel:GetDescendants())do
+if d:IsA("TextButton")or d:IsA("ImageButton")then
+local txt=(d:IsA("TextButton")and d.Text or(d:FindFirstChildOfClass("TextLabel")and d:FindFirstChildOfClass("TextLabel").Text or"")):lower()
+if txt:find(cmdName)and(txt:find("^:")or txt:find("^;"))then
 click(pBtn)
 click(d)
-globalCooldowns[cmdName]=tick() + COMMAND_DATA[cmdName]
+globalCooldowns[cmdName]=tick()+COMMAND_DATA[cmdName]
 if isSecondary then
-if not secondaryHitCount[target.UserId] then
+if not secondaryHitCount[target.UserId]then
 secondaryHitCount[target.UserId]={}
 end
-secondaryHitCount[target.UserId][cmdName]=(secondaryHitCount[target.UserId][cmdName] or 0) + 1
+secondaryHitCount[target.UserId][cmdName]=(secondaryHitCount[target.UserId][cmdName]or 0)+1
 else
-if not hitPlayers[target.UserId] then
+if not hitPlayers[target.UserId]then
 hitPlayers[target.UserId]={}
 end
 hitPlayers[target.UserId][cmdName]=true
 end
 lastExecution[target.UserId]=tick()
 success=true
-if cmdName=="ragdoll" or cmdName=="balloon" or cmdName=="rocket" then
+if cmdName=="ragdoll"or cmdName=="balloon"or cmdName=="rocket"then
 task.delay(COMMAND_DATA[cmdName],function()
 releaseCommandLock(cmdName)
 end)
@@ -88,7 +84,7 @@ end
 end
 end
 end
-if not success and (cmdName=="ragdoll" or cmdName=="balloon" or cmdName=="rocket") then
+if not success and(cmdName=="ragdoll"or cmdName=="balloon"or cmdName=="rocket")then
 commandInUse[cmdName]=false
 end
 playerProcessing[target.UserId]=nil
@@ -96,34 +92,32 @@ return success
 end
 local function checkStealers()
 local stealers={}
-for _,p in ipairs(Players:GetPlayers()) do
-if p ~=player and p:GetAttribute("Stealing")==true then
-if not lastExecution[p.UserId] or tick() - lastExecution[p.UserId] > 10 then
+for _,p in ipairs(Players:GetPlayers())do
+if p~=player and p:GetAttribute("Stealing")==true then
+if not lastExecution[p.UserId]or tick()-lastExecution[p.UserId]>10 then
 table.insert(stealers,p)
 end
 end
 end
-if #stealers==0 then
-return
-end
+if #stealers==0 then return end
 local availablePrimary={}
-for _,cmd in ipairs(PRIMARY_COMMANDS) do
-if isCommandReady(cmd) and not commandInUse[cmd] then
+for _,cmd in ipairs(PRIMARY_COMMANDS)do
+if isCommandReady(cmd)and not commandInUse[cmd]then
 table.insert(availablePrimary,cmd)
 end
 end
 local availableSecondary={}
-for _,cmd in ipairs(SECONDARY_COMMANDS) do
-if isCommandReady(cmd) then
+for _,cmd in ipairs(SECONDARY_COMMANDS)do
+if isCommandReady(cmd)then
 table.insert(availableSecondary,cmd)
 end
 end
-for i,stealer in ipairs(stealers) do
-if i <=#availablePrimary then
+for i,stealer in ipairs(stealers)do
+if i<=#availablePrimary then
 executeCommandOnTarget(stealer,availablePrimary[i],false)
 else
-local secondaryIndex=i - #availablePrimary
-if secondaryIndex <=#availableSecondary then
+local secondaryIndex=i-#availablePrimary
+if secondaryIndex<=#availableSecondary then
 executeCommandOnTarget(stealer,availableSecondary[secondaryIndex],true)
 end
 end
@@ -139,8 +133,6 @@ playerProcessing={}
 hitPlayers={}
 lastExecution={}
 secondaryHitCount={}
-commandInUse={
-["ragdoll"]=false,["balloon"]=false,["rocket"]=false
-}
+commandInUse={["ragdoll"]=false,["balloon"]=false,["rocket"]=false}
 _G.GrifStealerCleanup=nil
 end
