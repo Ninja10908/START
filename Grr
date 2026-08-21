@@ -1,0 +1,258 @@
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local UserInputService=game:GetService("UserInputService")
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local Workspace=game:GetService("Workspace")
+local LocalPlayer=Players.LocalPlayer
+local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart=Character:WaitForChild("HumanoidRootPart")
+local Humanoid=Character:WaitForChild("Humanoid")
+local function resolveHashed(name,className)
+className=className or "RemoteEvent"
+local netFolder=ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Net")
+if not netFolder then return nil end
+local prefix=(className=="RemoteFunction") and "RF/" or "RE/"
+local direct=netFolder:FindFirstChild(prefix .. name)
+if direct then return direct end
+if _G.Net then
+local ok,r=pcall(function()
+return (_G.Net.GetRemote and _G.Net:GetRemote(name)) or _G.Net:RemoteEvent(name)
+end)
+if ok and typeof(r)=="Instance" then return r end
+end
+for _,child in ipairs(netFolder:GetChildren()) do
+if child.Name:find("UseItem") or child.Name:find("RE/") and child:IsA("RemoteEvent") then
+local siblings=netFolder:GetChildren()
+for i=1,#siblings do
+if siblings[i]==child and i > 1 then
+local prev=siblings[i - 1]
+if prev and prev.Name:match("^RE/%x%x%x%x%x%x%x%x") then
+return prev
+end
+end
+end
+return child
+end
+end
+return nil
+end
+_G.__SXEGrappleDisparar=function(tool,pos,alvo,char,RSv)
+local refs=_G.__SXEPMRefs
+if not refs then
+refs={}
+local vistos={}
+local function juntar(t)
+if type(t)=="table" and not vistos[t] then
+vistos[t]=true
+refs[#refs + 1]=t
+end
+end
+pcall(function() 
+if RSv and RSv.Packages and RSv.Packages.PlayerMouse then
+juntar(require(RSv.Packages.PlayerMouse)) 
+end
+end)
+pcall(function()
+for _,v in ipairs(getgc(true)) do
+if type(v)=="table" and typeof(rawget(v,"Hit"))=="CFrame" then
+local n=0
+for _ in pairs(v) do n=n + 1 end
+if n <=3 then juntar(v) end
+end
+end
+end)
+_G.__SXEPMRefs=refs
+end
+local cam=Workspace.CurrentCamera
+local camAntes=cam and cam.CFrame
+local camNova
+if cam then
+pcall(function()
+local m=UserInputService:GetMouseLocation()
+local raio=cam:ViewportPointToRay(m.X,m.Y)
+local L=cam.CFrame:VectorToObjectSpace(raio.Direction).Unit
+local d=pos - cam.CFrame.Position
+if d.Magnitude > 0.01 then
+d=d.Unit
+camNova=CFrame.new(cam.CFrame.Position)
+* (CFrame.lookAt(Vector3.zero,d)
+* CFrame.lookAt(Vector3.zero,L):Inverse())
+end
+end)
+end
+local mira=CFrame.new(pos)
+local antes={}
+for i,t in ipairs(refs) do
+antes[i]={ rawget(t,"Hit"),rawget(t,"Target") }
+pcall(function() t.Hit=mira; t.Target=alvo end)
+end
+if camNova then cam.CFrame=camNova end
+local ok=pcall(function() tool:Activate() end)
+if not ok then ok=pcall(function() firesignal(tool.Activated) end) end
+task.spawn(function()
+for _=1,4 do
+if camNova and cam then cam.CFrame=camNova end
+for _,t in ipairs(refs) do
+pcall(function() t.Hit=mira; t.Target=alvo end)
+end
+RunService.Heartbeat:Wait()
+end
+if camNova and cam and camAntes then cam.CFrame=camAntes end
+for i,t in ipairs(refs) do
+local a=antes[i]
+pcall(function() t.Hit=a[1]; t.Target=a[2] end)
+end
+end)
+return ok
+end
+_G.SXEFireGrapple2=function(value,exato)
+local r=resolveHashed("UseItem","RemoteEvent")
+if not r then
+local t0=os.clock()
+repeat
+task.wait(0.05)
+r=resolveHashed("UseItem","RemoteEvent")
+until r or (os.clock() - t0) > 1.5
+end
+if not r then return false end
+local RSv=ReplicatedStorage
+local eu=LocalPlayer
+local char=eu.Character
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+if not hrp then return false end
+if eu:GetAttribute("Stealing") then return false end
+local tool=char:FindFirstChild("Grapple Hook")
+if not tool then
+local bp=eu:FindFirstChildOfClass("Backpack")
+local t2=bp and bp:FindFirstChild("Grapple Hook")
+local hum=char:FindFirstChildOfClass("Humanoid")
+if not t2 or not hum then return false end
+pcall(function() hum:EquipTool(t2) end)
+local t0=os.clock()
+repeat
+RunService.Heartbeat:Wait()
+char=eu.Character
+tool=char and char:FindFirstChild("Grapple Hook")
+until tool or os.clock() - t0 > 0.5
+if not tool then return false end
+hrp=char:FindFirstChild("HumanoidRootPart")
+if not hrp then return false end
+end
+local par0=RaycastParams.new()
+par0.FilterType=Enum.RaycastFilterType.Exclude
+par0.FilterDescendantsInstances={ char }
+if exato and typeof(value)=="Vector3" then
+local pos=value
+local m=(pos - hrp.Position).Magnitude
+if m < 10 or m > 50 then return false end
+local alvo
+local hit=Workspace:Raycast(hrp.Position,pos - hrp.Position,par0)
+if hit then alvo=hit.Instance end
+if not alvo then
+for _,p in ipairs(Workspace:GetPartBoundsInRadius(pos,6)) do
+if p:IsA("BasePart") and not p:IsDescendantOf(char) then 
+alvo=p
+break 
+end
+end
+end
+if not alvo then return false end
+return _G.__SXEGrappleDisparar(tool,pos,alvo,char,RSv)
+end
+local destino
+if typeof(value)=="Vector3" then 
+destino=value
+elseif typeof(value)=="Instance" and value:IsA("BasePart") then 
+destino=value.Position 
+end
+local dir
+if destino then
+dir=destino - hrp.Position
+dir=Vector3.new(dir.X,0,dir.Z)
+end
+if not dir or dir.Magnitude < 1 then
+local lv=hrp.CFrame.LookVector
+dir=Vector3.new(lv.X,0,lv.Z)
+end
+if dir.Magnitude < 0.01 then return false end
+dir=dir.Unit
+local par=RaycastParams.new()
+par.FilterType=Enum.RaycastFilterType.Exclude
+par.FilterDescendantsInstances={ char }
+local pos,alvo,melhorM
+for _,d in ipairs({ 9,10,11,12,13,14,16,18,21,24,28,32,36,40,45 }) do
+local origem=hrp.Position + dir * d + Vector3.new(0,3,0)
+local hit=Workspace:Raycast(origem,Vector3.new(0,-60,0),par)
+if hit then
+local m=(hit.Position - hrp.Position).Magnitude
+if m >=10 and m <=50 and (not melhorM or m < melhorM) then
+pos,alvo,melhorM=hit.Position,hit.Instance,m
+end
+end
+end
+if not pos then
+for _,d in ipairs({ 11,14,18,24,32,42,48 }) do
+local hit=Workspace:Raycast(hrp.Position,dir * d,par)
+if hit then
+local m=(hit.Position - hrp.Position).Magnitude
+if m >=10 and m <=50 and (not melhorM or m < melhorM) then
+pos,alvo,melhorM=hit.Position,hit.Instance,m
+end
+end
+end
+end
+if not pos or not alvo then return false end
+return _G.__SXEGrappleDisparar(tool,pos,alvo,char,RSv)
+end
+local skipPos=Vector3.new(-0.14,5.69,1.14)
+local function parse(t)
+t=tostring(t or ""):gsub("%s","")
+local n,s=t:match("([%d%.]+)([KkMmBbTt]?)")
+if not n then return 0 end
+n=tonumber(n) or 0
+local m={K=1e3,M=1e6,B=1e9,T=1e12}
+return n * (m[(s or ""):upper()] or 1)
+end
+local function findBestPet()
+local debris=Workspace:FindFirstChild("Debris")
+if debris then
+local best={val=-1,pos=nil}
+for _,t in ipairs(debris:GetChildren()) do
+if t.Name=="FastOverheadTemplate" then
+local sg=t:FindFirstChildOfClass("SurfaceGui")
+if sg and sg.Adornee and sg.Adornee.Parent then
+if (sg.Adornee.Position - skipPos).Magnitude >=30 then
+local gen=sg:FindFirstChild("Generation",true)
+if gen and gen:IsA("TextLabel") then
+local txt=gen.Text or ""
+if txt ~="" and txt:find("/s") then
+local val=parse(txt)
+if val > best.val then
+best={val=val,pos=sg.Adornee.Position}
+end
+end
+end
+end
+end
+end
+end
+if best.pos then
+return best.pos
+end
+end
+return nil
+end
+_G.fireGrapple=function(targetPos)
+if not targetPos then
+targetPos=findBestPet()
+if not targetPos then
+return false
+end
+end
+return _G.SXEFireGrapple2(targetPos)
+end
+task.spawn(function()
+Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+HumanoidRootPart=Character:WaitForChild("HumanoidRootPart",10)
+Humanoid=Character:WaitForChild("Humanoid",10)
+end)
