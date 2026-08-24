@@ -1,127 +1,102 @@
-local Players=game:GetService("Players")
-local ReplicatedStorage=game:GetService("ReplicatedStorage")
-local Workspace=game:GetService("Workspace")
-local LocalPlayer=Players.LocalPlayer
-local netFolder=ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
-local PLATFORM_SIZE=Vector3.new(96,105,96)
-local X_HALF=PLATFORM_SIZE.X / 2
-local Z_HALF=PLATFORM_SIZE.Z / 2
-local myPlotSign=nil
-local function getPlotSign()
-local un=LocalPlayer.Name:lower()
-local dn=LocalPlayer.DisplayName:lower()
-for _,obj in ipairs(Workspace:GetDescendants()) do
-if obj:IsA("BasePart") and obj.Name=="PlotSign" then
-local lbl=obj:FindFirstChildWhichIsA("TextLabel",true)
-if lbl then
-local txt=lbl.Text:lower()
-if txt:find(un,1,true) or txt:find(dn,1,true) then
-return obj
-end
-end
-end
-end
-return nil
-end
-local function isNearMyBase(pos)
-if not myPlotSign or not pos then return false end
-local bp=myPlotSign.Position
-local diff=pos - bp
-return math.abs(diff.X) <=X_HALF and math.abs(diff.Z) <=Z_HALF
-end
-myPlotSign=getPlotSign()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
+
 local function findTool(name)
-local char=LocalPlayer.Character
-local bp=LocalPlayer:FindFirstChild("Backpack")
-return (char and char:FindFirstChild(name)) or (bp and bp:FindFirstChild(name))
+    local char = LocalPlayer.Character
+    local bp = LocalPlayer:FindFirstChild("Backpack")
+    return (char and char:FindFirstChild(name)) or (bp and bp:FindFirstChild(name))
 end
+
 local function parseNumber(t)
-t=tostring(t or ""):gsub("%s","")
-local n,s=t:match("([%d%.]+)([KkMmBbTt]?)")
-if not n then return 0 end
-n=tonumber(n) or 0
-local m={K=1e3,M=1e6,B=1e9,T=1e12}
-return n * (m[(s or ""):upper()] or 1)
+    t = tostring(t or ""):gsub("%s", "")
+    local n, s = t:match("([%d%.]+)([KkMmBbTt]?)")
+    if not n then return 0 end
+    n = tonumber(n) or 0
+    local m = {K = 1e3, M = 1e6, B = 1e9, T = 1e12}
+    return n * (m[(s or ""):upper()] or 1)
 end
+
 local function findBestPet()
-local debris=Workspace:FindFirstChild("Debris")
-if not debris then return nil end
-local best={val=-1,part=nil}
-for _,t in ipairs(debris:GetChildren()) do
-if t.Name=="FastOverheadTemplate" then
-local sg=t:FindFirstChildOfClass("SurfaceGui")
-if sg and sg.Adornee and sg.Adornee.Parent then
-local pos=sg.Adornee.Position
-if isNearMyBase(pos) then
-continue
+    local debris = Workspace:FindFirstChild("Debris")
+    if not debris then return nil end
+    local best = {val = -1, part = nil}
+    for _, t in ipairs(debris:GetChildren()) do
+        if t.Name == "FastOverheadTemplate" then
+            local sg = t:FindFirstChildOfClass("SurfaceGui")
+            if sg and sg.Adornee and sg.Adornee.Parent then
+                local gen = sg:FindFirstChild("Generation", true)
+                if gen and gen:IsA("TextLabel") then
+                    local txt = gen.Text or ""
+                    if txt ~= "" and txt:find("/s") then
+                        local val = parseNumber(txt)
+                        if val > best.val then
+                            best = {part = sg.Adornee, val = val}
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if best.part and best.part.Parent then
+        return best.part
+    end
+    return nil
 end
-local gen=sg:FindFirstChild("Generation",true)
-if gen and gen:IsA("TextLabel") then
-local txt=gen.Text or ""
-if txt ~="" and txt:find("/s") then
-local val=parseNumber(txt)
-if val > best.val then
-best={part=sg.Adornee,val=val}
+
+_G.jackkFireGrapple2 = function(value)
+    local function netChild6()
+        local c = netFolder:GetChildren()[6]
+        if c and c:IsA("RemoteEvent") then return c end
+        return nil
+    end
+    local r = netChild6()
+    if not r then
+        local t0 = os.clock()
+        repeat
+            task.wait(0.05)
+            r = netChild6()
+        until r or (os.clock() - t0) > 1.5
+    end
+    if not r then return false end
+    return pcall(function()
+        r:FireServer(tonumber(value) or 0.33)
+    end)
 end
-end
-end
-end
-end
-end
-if best.part and best.part.Parent then
-return best.part
-end
-return nil
-end
-_G.jackkFireGrapple2=function(value)
-local function netChild6()
-local c=netFolder:GetChildren()[6]
-if c and c:IsA("RemoteEvent") then return c end
-return nil
-end
-local r=netChild6()
-if not r then
-local t0=os.clock()
-repeat
-task.wait(0.05)
-r=netChild6()
-until r or (os.clock() - t0) > 1.5
-end
-if not r then return false end
-return pcall(function()
-r:FireServer(tonumber(value) or 0.33)
-end)
-end
+
 local function fireToBestPet()
-local bestPart=findBestPet()
-if not bestPart or not bestPart.Parent then return false end
-local char=LocalPlayer.Character
-if not char then return false end
-local hrp=char:FindFirstChild("HumanoidRootPart")
-if not hrp then return false end
-local hum=char:FindFirstChildOfClass("Humanoid")
-if not hum then return false end
-local grapple=findTool("Grapple Hook")
-if not grapple then return false end
-if grapple.Parent ~=char then
-pcall(function() hum:EquipTool(grapple) end)
-task.wait(0.1)
+    local bestPart = findBestPet()
+    if not bestPart or not bestPart.Parent then return false end
+    local char = LocalPlayer.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    local grapple = findTool("Grapple Hook")
+    if not grapple then return false end
+    if grapple.Parent ~= char then
+        pcall(function() hum:EquipTool(grapple) end)
+        task.wait(0.1)
+    end
+    if not char:FindFirstChild("Grapple Hook") then return false end
+    local success = false
+    if _G.jackkFireGrapple2 then
+        success = _G.jackkFireGrapple2()
+    else
+        local r = netFolder:GetChildren()[6]
+        if r and r:IsA("RemoteEvent") then
+            success = pcall(function()
+                r:FireServer(0.33)
+            end)
+        end
+    end
+    if success then
+        hrp.CFrame = CFrame.new(hrp.Position, bestPart.Position)
+    end
+    return success
 end
-if not char:FindFirstChild("Grapple Hook") then return false end
-local success=false
-if _G.jackkFireGrapple2 then
-success=_G.jackkFireGrapple2()
-else
-local r=netFolder:GetChildren()[6]
-if r and r:IsA("RemoteEvent") then
-success=pcall(function()
-r:FireServer(0.33)
-end)
-end
-end
-if success then
-hrp.CFrame=CFrame.new(hrp.Position,bestPart.Position)
-end
-return success
-end
+
 fireToBestPet()
