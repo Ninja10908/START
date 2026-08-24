@@ -3,6 +3,33 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Workspace=game:GetService("Workspace")
 local LocalPlayer=Players.LocalPlayer
 local netFolder=ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
+local PLATFORM_SIZE=Vector3.new(96,105,96)
+local X_HALF=PLATFORM_SIZE.X / 2
+local Z_HALF=PLATFORM_SIZE.Z / 2
+local myPlotSign=nil
+local function getPlotSign()
+local un=LocalPlayer.Name:lower()
+local dn=LocalPlayer.DisplayName:lower()
+for _,obj in ipairs(Workspace:GetDescendants()) do
+if obj:IsA("BasePart") and obj.Name=="PlotSign" then
+local lbl=obj:FindFirstChildWhichIsA("TextLabel",true)
+if lbl then
+local txt=lbl.Text:lower()
+if txt:find(un,1,true) or txt:find(dn,1,true) then
+return obj
+end
+end
+end
+end
+return nil
+end
+local function isNearMyBase(pos)
+if not myPlotSign or not pos then return false end
+local bp=myPlotSign.Position
+local diff=pos - bp
+return math.abs(diff.X) <=X_HALF and math.abs(diff.Z) <=Z_HALF
+end
+myPlotSign=getPlotSign()
 local function findTool(name)
 local char=LocalPlayer.Character
 local bp=LocalPlayer:FindFirstChild("Backpack")
@@ -24,6 +51,10 @@ for _,t in ipairs(debris:GetChildren()) do
 if t.Name=="FastOverheadTemplate" then
 local sg=t:FindFirstChildOfClass("SurfaceGui")
 if sg and sg.Adornee and sg.Adornee.Parent then
+local pos=sg.Adornee.Position
+if isNearMyBase(pos) then
+continue
+end
 local gen=sg:FindFirstChild("Generation",true)
 if gen and gen:IsA("TextLabel") then
 local txt=gen.Text or ""
