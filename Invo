@@ -1,17 +1,3 @@
-_G.AIDS=true
-_G.ISE=false
-_G.ISA=233
-_G.SSV=5
-_G.ARL=true
-_G.RIP=false
-_G.togins=nil
-local LocalPlayer=game:GetService("Players").LocalPlayer
-local RunService=game:GetService("RunService")
-local UserInputService=game:GetService("UserInputService")
-local Workspace=game:GetService("Workspace")
-local HttpService=game:GetService("HttpService")
-local guiHolder
-
 if _G.StealControlsCleanup then
     pcall(_G.StealControlsCleanup)
 end
@@ -21,6 +7,21 @@ _G.StealControlsCleanup=function()
         local old=playerGui:FindFirstChild("StealControls")
         if old then
             old:Destroy()
+        end
+    end
+end
+
+_G.StopInvisible = function()
+    if _G.AIDS then
+        _G.AIDS = false
+        if _G.ISE and _G.togins then
+            pcall(_G.togins)
+        end
+        _G.RIP = false
+        clearAllGhosts()
+        task.wait(0.1)
+        if _G.ISE and _G.togins then
+            pcall(_G.togins)
         end
     end
 end
