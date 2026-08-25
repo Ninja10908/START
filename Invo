@@ -10,6 +10,21 @@ local RunService=game:GetService("RunService")
 local UserInputService=game:GetService("UserInputService")
 local Workspace=game:GetService("Workspace")
 local HttpService=game:GetService("HttpService")
+local guiHolder
+
+if _G.StealControlsCleanup then
+    pcall(_G.StealControlsCleanup)
+end
+_G.StealControlsCleanup=function()
+    local playerGui=LocalPlayer:FindFirstChild("PlayerGui")
+    if playerGui then
+        local old=playerGui:FindFirstChild("StealControls")
+        if old then
+            old:Destroy()
+        end
+    end
+end
+
 local cf="rotation.json"
 local Config={}
 local function Ssc()
@@ -248,6 +263,7 @@ local humanoid=character.Humanoid
 local animator=humanoid:FindFirstChild("Animator") or Instance.new("Animator",humanoid)
 local animTrack=animator:LoadAnimation(anim)
 animTrack.Priority=Enum.AnimationPriority.Action4
+animTrack.Looped = true
 animTrack:Play(0,1,0)
 anim:Destroy()
 table.insert(tracks,animTrack)
@@ -385,46 +401,20 @@ humanoid.Health=humanoid.MaxHealth
 end
 end)
 end
-task.spawn(function()
-local wasStealingForInvis=false
-local autoEnabledInvis=false
-task.wait(1)
-while task.wait(0.1) do
-if _G.AIDS==false then
-wasStealingForInvis=false
-autoEnabledInvis=false
-else
-local isStealing=LocalPlayer:GetAttribute("Stealing")
-if isStealing and not wasStealingForInvis then
-if not _G.ISE and _G.togins then
-task.delay(0.25,function()
-if LocalPlayer:GetAttribute("Stealing") and not _G.ISE then
-pcall(_G.togins)
-autoEnabledInvis=true
-end
-end)
-end
-end
-if not isStealing and autoEnabledInvis and _G.ISE and _G.togins then
-pcall(_G.togins)
-autoEnabledInvis=false
-end
-wasStealingForInvis=isStealing
-end
-end
-end)
+
 LocalPlayer:GetAttributeChangedSignal("Stealing"):Connect(function()
-local isStealing=LocalPlayer:GetAttribute("Stealing")
-if isStealing then
-if _G.AIDS and _G.togins and not _G.ISE then
-_G.togins()
-end
-else
-if _G.AIDS and _G.togins and _G.ISE then
-_G.togins()
-end
-end
+    local isStealing = LocalPlayer:GetAttribute("Stealing")
+    if isStealing then
+        if _G.AIDS and _G.togins and not _G.ISE then
+            pcall(_G.togins)
+        end
+    else
+        if _G.ISE and _G.togins then
+            pcall(_G.togins)
+        end
+    end
 end)
+
 local function onCharacterAdded(newChar)
 clearAllGhosts()
 lagbackCallCount=0
@@ -474,11 +464,18 @@ d.CFrame=r.CFrame
 end
 end
 end)
-local guiHolder=Instance.new("ScreenGui")
+
+guiHolder=Instance.new("ScreenGui")
 guiHolder.Name="StealControls"
+local playerGui=LocalPlayer:WaitForChild("PlayerGui")
+local existing=playerGui:FindFirstChild("StealControls")
+if existing then
+    existing:Destroy()
+end
 guiHolder.ResetOnSpawn=false
-guiHolder.Parent=LocalPlayer:WaitForChild("PlayerGui")
+guiHolder.Parent=playerGui
 guiHolder.Enabled=false
+
 local sliderBg=Instance.new("Frame")
 sliderBg.Size=UDim2.new(0,150,0,12)
 sliderBg.Position=UDim2.new(0.5,-75,0,10)
