@@ -636,5 +636,5 @@ hrp.Velocity=Vector3.zero
 isTpMoving=false
 end
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/START/refs/heads/main/Fnrt"))()
-task.wait(0.2)
+task.wait(0.4)
 jack827()
