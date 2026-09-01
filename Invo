@@ -49,6 +49,7 @@ end
 end
 Llc()
 if Config.ISA then _G.ISA=Config.ISA end
+if Config.SSV then _G.SSV=Config.SSV end
 local animPlaying=false
 local tracks={}
 local clone,oldRoot,hip,connection
@@ -356,7 +357,7 @@ c:Destroy()
 end
 end
 local rotAngle=_G.ISA
-local sa=5 * 0.5
+local sa=_G.SSV * 0.5
 local cf=root.CFrame - Vector3.new(0,sa,0)
 oldRoot.CFrame=cf * CFrame.Angles(math.rad(rotAngle),0,0)
 oldRoot.AssemblyLinearVelocity=root.AssemblyLinearVelocity
@@ -470,107 +471,159 @@ end
 guiHolder.ResetOnSpawn=false
 guiHolder.Parent=playerGui
 guiHolder.Enabled=false
-local sliderBg=Instance.new("Frame")
-sliderBg.Size=UDim2.new(0,150,0,12)
-sliderBg.Position=UDim2.new(0.5,-75,0,10)
-sliderBg.BackgroundColor3=Color3.fromRGB(60,20,20)
+local activeSlider=nil
+local function createSlider(parent,yPos,value,minVal,maxVal,step,configKey)
+local container=Instance.new("Frame")
+container.Size=UDim2.new(0,200,0,30)
+container.Position=UDim2.new(0.5,-100,0,yPos)
+container.BackgroundTransparency=1
+container.Parent=parent
+local sliderBg=Instance.new("TextButton")
+sliderBg.Size=UDim2.new(1,0,0,12)
+sliderBg.Position=UDim2.new(0,0,0.5,-6)
+sliderBg.BackgroundColor3=Color3.fromRGB(120,0,0)
+sliderBg.BackgroundTransparency=0.45
 sliderBg.BorderSizePixel=0
-sliderBg.Parent=guiHolder
+sliderBg.Text=""
+sliderBg.AutoButtonColor=false
+sliderBg.Parent=container
+local stroke=Instance.new("UIStroke")
+stroke.Color=Color3.fromRGB(255,100,100)
+stroke.Transparency=0.25
+stroke.Thickness=1
+stroke.Parent=sliderBg
 local sliderFill=Instance.new("Frame")
-sliderFill.Size=UDim2.new((_G.ISA - 150) / 150,0,1,0)
-sliderFill.BackgroundColor3=Color3.fromRGB(255,50,50)
+local percent=math.clamp((value-minVal)/(maxVal-minVal),0,1)
+sliderFill.Size=UDim2.new(percent,0,1,0)
+sliderFill.BackgroundColor3=Color3.fromRGB(255,0,0)
+sliderFill.BackgroundTransparency=0.25
 sliderFill.BorderSizePixel=0
+sliderFill.Active=false
 sliderFill.Parent=sliderBg
-local sliderButton=Instance.new("TextButton")
-sliderButton.Size=UDim2.new(0,34,0,28)
-sliderButton.Position=UDim2.new((_G.ISA - 150) / 150,-17,0.5,-14)
-sliderButton.BackgroundColor3=Color3.fromRGB(255,50,50)
-sliderButton.TextColor3=Color3.fromRGB(255,255,255)
-sliderButton.Text=tostring(_G.ISA)
-sliderButton.Font=Enum.Font.SourceSansBold
-sliderButton.TextScaled=true
+local sliderButton=Instance.new("Frame")
+sliderButton.Size=UDim2.new(0,28,0,24)
+sliderButton.Position=UDim2.new(percent,-14,0.5,-12)
+sliderButton.BackgroundColor3=Color3.fromRGB(255,40,40)
+sliderButton.BackgroundTransparency=0.35
 sliderButton.BorderSizePixel=0
+sliderButton.Active=false
 sliderButton.Parent=sliderBg
+local valueText=Instance.new("TextLabel")
+valueText.Size=UDim2.new(1,0,1,0)
+valueText.BackgroundTransparency=1
+valueText.TextColor3=Color3.fromRGB(255,255,255)
+valueText.Font=Enum.Font.SourceSansBold
+valueText.TextScaled=true
+valueText.Parent=sliderButton
+local eyeButton=Instance.new("TextButton")
+eyeButton.Name="EyeButton"
+eyeButton.Size=UDim2.new(0,40,0,20)
+eyeButton.Position=UDim2.new(0,-44,0.5,-10)
+eyeButton.BackgroundColor3=Color3.fromRGB(120,0,0)
+eyeButton.BackgroundTransparency=0.35
+eyeButton.BorderSizePixel=0
+eyeButton.Text="HIDE"
+eyeButton.TextColor3=Color3.fromRGB(255,255,255)
+eyeButton.TextScaled=true
+eyeButton.Font=Enum.Font.SourceSansBold
+eyeButton.Parent=container
+local eyeStroke=Instance.new("UIStroke")
+eyeStroke.Color=Color3.fromRGB(255,100,100)
+eyeStroke.Transparency=0.25
+eyeStroke.Thickness=1
+eyeStroke.Parent=eyeButton
+local sliderVisible=true
+if Config[configKey.."Visible"]~=nil then
+sliderVisible=Config[configKey.."Visible"]
+end
+if not sliderVisible then
+sliderBg.Visible=false
+eyeButton.Text="SHOW"
+end
+eyeButton.MouseButton1Click:Connect(function()
+sliderVisible=not sliderVisible
+sliderBg.Visible=sliderVisible
+Config[configKey.."Visible"]=sliderVisible
+if sliderVisible then
+eyeButton.Text="HIDE"
+else
+eyeButton.Text="SHOW"
+end
+Ssc()
+end)
 local dragging=false
 local activeInput=nil
 local needsSave=false
-local lastValue=_G.ISA
-local deadZone=1
-local function updateSliderFromPosition(x)
+local lastValue=value
+local function formatValue(val)
+if step<1 then
+return string.format("%.1f",val)
+end
+return tostring(val)
+end
+valueText.Text=formatValue(value)
+local function updateSlider(x)
 local absPos=sliderBg.AbsolutePosition
 local absSize=sliderBg.AbsoluteSize
-local relativeX=(x - absPos.X) / absSize.X
-relativeX=math.clamp(relativeX,0,1)
-local value=150 + (relativeX * 150)
-value=math.round(math.clamp(value,150,300))
-if math.abs(value - lastValue) < deadZone then
+local relativeX=math.clamp((x-absPos.X)/absSize.X,0,1)
+local val=minVal+(relativeX*(maxVal-minVal))
+val=math.round(val/step)*step
+val=math.clamp(val,minVal,maxVal)
+if step<1 then
+val=math.round(val*10)/10
+end
+if val==lastValue then return end
+lastValue=val
+_G[configKey]=val
+Config[configKey]=val
+needsSave=true
+valueText.Text=formatValue(val)
+local newPercent=(val-minVal)/(maxVal-minVal)
+sliderFill.Size=UDim2.new(newPercent,0,1,0)
+sliderButton.Position=UDim2.new(newPercent,-14,0.5,-12)
+end
+local function beginDrag(input)
+if activeSlider and activeSlider~=container then
 return
 end
-_G.ISA=value
-Config.ISA=_G.ISA
-lastValue=value
-needsSave=true
-sliderButton.Text=tostring(_G.ISA)
-local percent=(_G.ISA - 150) / 150
-sliderFill.Size=UDim2.new(percent,0,1,0)
-sliderButton.Position=UDim2.new(percent,-17,0.5,-14)
-end
-local function startDrag(input)
 if dragging then return end
+activeSlider=container
 dragging=true
 activeInput=input
 needsSave=false
-lastValue=_G.ISA
-updateSliderFromPosition(input.Position.X)
+lastValue=_G[configKey] or value
+updateSlider(input.Position.X)
 end
-local function stopDrag(input)
-if input and activeInput and input ~=activeInput then
-return
-end
-if dragging then
-dragging=false
-activeInput=nil
-if needsSave then
-Ssc()
-needsSave=false
-end
-end
-end
-sliderButton.InputBegan:Connect(function(input)
-if input.UserInputType==Enum.UserInputType.MouseButton1 or
-input.UserInputType==Enum.UserInputType.Touch then
-startDrag(input)
-end
-end)
 sliderBg.InputBegan:Connect(function(input)
-if input.UserInputType==Enum.UserInputType.MouseButton1 or
-input.UserInputType==Enum.UserInputType.Touch then
-startDrag(input)
+if input.UserInputType==Enum.UserInputType.Touch
+or input.UserInputType==Enum.UserInputType.MouseButton1 then
+beginDrag(input)
 end
 end)
 UserInputService.InputChanged:Connect(function(input)
 if not dragging then return end
-if activeInput and activeInput.UserInputType==Enum.UserInputType.MouseButton1 then
-if input.UserInputType==Enum.UserInputType.MouseMovement then
-updateSliderFromPosition(input.Position.X)
-end
-elseif input==activeInput then
-updateSliderFromPosition(input.Position.X)
+if input~=activeInput then return end
+if input.UserInputType==Enum.UserInputType.Touch
+or input.UserInputType==Enum.UserInputType.MouseMovement then
+updateSlider(input.Position.X)
 end
 end)
 UserInputService.InputEnded:Connect(function(input)
-if not dragging then return end
-if activeInput and activeInput.UserInputType==Enum.UserInputType.MouseButton1 then
-if input.UserInputType==Enum.UserInputType.MouseButton1 then
-stopDrag(input)
+if not dragging or input~=activeInput then
+return
 end
-elseif input==activeInput then
-stopDrag(input)
+dragging=false
+activeInput=nil
+activeSlider=nil
+if needsSave then
+Ssc()
+needsSave=false
 end
 end)
-UserInputService.WindowFocusReleased:Connect(function()
-stopDrag()
-end)
+return container
+end
+createSlider(guiHolder,10,_G.ISA,150,300,1,"ISA")
+createSlider(guiHolder,50,_G.SSV,5,7,0.1,"SSV")
 local function updateGuiVisibility()
 guiHolder.Enabled=LocalPlayer:GetAttribute("Stealing")==true
 end
