@@ -86,7 +86,7 @@ end
 end
 local function gettools()
 local tools={
-"Waverider","Cupid's Wings","Santa's Sleigh","Witch's Broom","Flying Carpet"
+"Waverider","Cupid's Wings","Santa's Sleigh","Witch's Broom","Flying Carpet", "Flying Bee"
 }
 local char=LocalPlayer.Character
 local backpack=LocalPlayer.Backpack
