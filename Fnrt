@@ -48,7 +48,7 @@ end
 
 _G.jackkFireGrapple2 = function(value)
     local function netChild6()
-        local c = netFolder:GetChildren()[6]
+        local c = netFolder:GetChildren()[208]
         if c and c:IsA("RemoteEvent") then return c end
         return nil
     end
